@@ -1,0 +1,97 @@
+# CopperSkin
+
+CopperSkin is a WPF theme engine extracted from the amChipper custom skin and rebuilt as a reusable runtime, designer, CLI, sample app, and release package.
+
+The engine is built around typed theme tokens, dynamic WPF resources, custom window chrome, standard-control styling, themed drawing surfaces, `.cskin` theme packs, and a custom `.lzhc` release archive command. `mainlogo.png` is the engine logo and is embedded into the designer and sample shell.
+
+## Projects
+
+| Project | Purpose | Target frameworks |
+| --- | --- | --- |
+| `CopperSkin.Core` | Theme model, validation, serialization, pack archives, hard-coded color audit | `netstandard2.0`, `net7.0`, `net8.0`, `net9.0`, `net10.0` |
+| `CopperSkin.Wpf` | Runtime WPF engine, resources, implicit styles, `CopperWindow`, `CopperMessageBox`, `CopperTaskDialog` | `net7.0-windows`, `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
+| `CopperSkin.Cli` | Theme export, validation, source audit, `.cskin`, `.lzhc` | `net8.0`, `net9.0`, `net10.0` |
+| `CopperSkin.Designer` | Theme creation tool with live preview and token editing | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
+| `CopperSkin.SampleKitchenSink` | WPF kitchen-sink preview app | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
+
+The core engine stays compatible as far back as `netstandard2.0`. The WPF runtime starts at `net7.0-windows`. Tooling uses `ZLS.QuickLog` and therefore starts at `net8.0`.
+
+## Quick Start
+
+Install the WPF theme runtime in your app startup:
+
+```csharp
+using CopperSkin.Core.Theming;
+using CopperSkin.Wpf;
+
+var themePack = BuiltInThemeCatalog.CreateThemePack();
+CopperSkinThemeManager.Install(Application.Current, new CopperSkinThemeOptions
+{
+    ThemePack = themePack,
+    DefaultThemeName = "Neon Tape"
+});
+```
+
+Use the custom shell controls where you want full window/dialog ownership:
+
+```xml
+<controls:CopperWindow
+    x:Class="MyApp.MainWindow"
+    xmlns:controls="clr-namespace:CopperSkin.Wpf.Controls;assembly=CopperSkin.Wpf"
+    Title="My Copper App"
+    Width="1100"
+    Height="720">
+    <Grid />
+</controls:CopperWindow>
+```
+
+Message and task dialogs are theme-aware:
+
+```csharp
+CopperMessageBox.Show(this, "Saved", "Theme pack exported.", "Nice");
+CopperTaskDialog.Show(this, "Validation", "No blocking theme errors.", "All Good");
+```
+
+## Theme Designer
+
+`CopperSkin.Designer` is the theme creation tool. It includes:
+
+- built-in amChipper theme selection
+- live token grid editing
+- instant WPF preview using the real runtime resource emitter
+- diagnostics for missing tokens, malformed colors, and low contrast
+- `.json` export for theme packs
+- themed `CopperTaskDialog` preview
+- QuickLog-based tool logging
+
+Run it from source:
+
+```powershell
+dotnet run --project .\src\CopperSkin.Designer\CopperSkin.Designer.csproj -c Release -f net10.0-windows
+```
+
+## CLI
+
+```powershell
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- list
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- export-builtins .\themes\amchipper\theme-pack.json
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- validate .\themes\amchipper\theme-pack.json
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- audit .\src
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- pack .\themes\amchipper .\artifacts\CopperSkin.AmChipper.cskin
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- lzhc .\Ready2Release .\Ready2Release\CopperSkin.Ready2Release.lzhc
+```
+
+## Build And Test
+
+```powershell
+dotnet restore .\CopperSkin.slnx
+dotnet build .\CopperSkin.slnx -c Release
+dotnet test .\CopperSkin.slnx -c Release --no-build
+```
+
+## Docs
+
+- [Control Coverage](docs/CONTROL_COVERAGE.md)
+- [Theme Format](docs/THEME_FORMAT.md)
+- [Aegis Plan](docs/aegis/plans/2026-05-25-copperskin-wpf-theme-engine.md)
+

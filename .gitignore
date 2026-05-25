@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+.idea/
+artifacts/
+Ready2Release/
+*.user
+*.suo
+*.log

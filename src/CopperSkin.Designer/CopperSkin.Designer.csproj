@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CopperSkin.Core\CopperSkin.Core.csproj" />
+    <ProjectReference Include="..\CopperSkin.Wpf\CopperSkin.Wpf.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ZLS.QuickLog" Version="2.4.0" />
+    <Resource Include="..\..\mainlogo.png" Link="Assets\mainlogo.png" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+</Project>

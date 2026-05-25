@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/CopperSkin.SampleKitchenSink/CopperSkin.SampleKitchenSink.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CopperSkin.Cli/CopperSkin.Cli.csproj" />
+    <Project Path="src/CopperSkin.Core/CopperSkin.Core.csproj" />
+    <Project Path="src/CopperSkin.Designer/CopperSkin.Designer.csproj" />
+    <Project Path="src/CopperSkin.Wpf/CopperSkin.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CopperSkin.Cli.Tests/CopperSkin.Cli.Tests.csproj" />
+    <Project Path="tests/CopperSkin.Core.Tests/CopperSkin.Core.Tests.csproj" />
+    <Project Path="tests/CopperSkin.Visual.Tests/CopperSkin.Visual.Tests.csproj" />
+    <Project Path="tests/CopperSkin.Wpf.Tests/CopperSkin.Wpf.Tests.csproj" />
+  </Folder>
+</Solution>
