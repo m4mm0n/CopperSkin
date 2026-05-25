@@ -1,3 +1,24 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : src\CopperSkin.Wpf\Resources\CopperSkinResourceEmitter.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:34:20 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : 14FB6AF1
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: 14FB6AF1
 // copperskin:allow-hardcoded-color-file
 using System.Windows;
 using System.Windows.Media;
@@ -5,6 +26,9 @@ using CopperSkin.Core.Theming;
 
 namespace CopperSkin.Wpf.Resources;
 
+/// <summary>
+/// Turns resolved CopperSkin theme tokens into WPF colors, brushes, gradients, effects, and legacy resource aliases.
+/// </summary>
 public static class CopperSkinResourceEmitter
 {
     private static readonly string[] DictionarySources =
@@ -12,6 +36,9 @@ public static class CopperSkinResourceEmitter
         "/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml"
     ];
 
+    /// <summary>
+    /// Merges the bundled CopperSkin control style dictionaries into a WPF resource dictionary.
+    /// </summary>
     public static void MergeDefaultDictionaries(ResourceDictionary target)
     {
         foreach (string source in DictionarySources)
@@ -24,6 +51,9 @@ public static class CopperSkinResourceEmitter
         }
     }
 
+    /// <summary>
+    /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
+    /// </summary>
     public static void Apply(ResourceDictionary target, ResolvedTheme theme, CopperSkinThemeOptions? options = null)
     {
         options ??= new CopperSkinThemeOptions();
@@ -76,11 +106,17 @@ public static class CopperSkinResourceEmitter
         target["PanelShadow"] = target["CopperSkin.PanelShadow"];
     }
 
+    /// <summary>
+    /// Converts a CopperSkin color token value into a WPF color.
+    /// </summary>
     public static Color ToColor(string value)
     {
         return (Color)ColorConverter.ConvertFromString(value);
     }
 
+    /// <summary>
+    /// Writes both brush and color resources for a token, including legacy color aliases when needed.
+    /// </summary>
     private static void SetBrushAndColor(ResourceDictionary target, string key, Color color)
     {
         target[$"{key}.color"] = color;
@@ -90,6 +126,9 @@ public static class CopperSkinResourceEmitter
             target[$"{key}Color"] = color;
     }
 
+    /// <summary>
+    /// Builds a three-stop themed gradient resource from resolved CopperSkin color tokens.
+    /// </summary>
     private static void SetGradient(ResourceDictionary target, string key, string first, string second, string third, bool vertical)
     {
         target[key] = new LinearGradientBrush(
@@ -103,11 +142,17 @@ public static class CopperSkinResourceEmitter
             vertical ? new Point(0, 1) : new Point(1, 1));
     }
 
+    /// <summary>
+    /// Determines whether a token value looks like a supported ARGB or RGB hex color.
+    /// </summary>
     private static bool IsColor(string value)
     {
         return value.StartsWith("#", StringComparison.Ordinal) && (value.Length == 7 || value.Length == 9);
     }
 
+    /// <summary>
+    /// Reads a numeric token using invariant culture and falls back when the token is missing or invalid.
+    /// </summary>
     private static double ReadDouble(string value, double fallback)
     {
         return double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double result)

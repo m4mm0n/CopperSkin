@@ -1,8 +1,35 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : src\CopperSkin.Core\Theming\BuiltInThemeCatalog.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:31:37 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : 509ADC30
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: 509ADC30
 // copperskin:allow-hardcoded-color-file
 namespace CopperSkin.Core.Theming;
 
+/// <summary>
+/// Builds the bundled amChipper-inspired CopperSkin theme catalog used by the runtime, designer, CLI, and sample app.
+/// </summary>
 public static class BuiltInThemeCatalog
 {
+    /// <summary>
+    /// Creates the bundled CopperSkin theme pack from the built-in amChipper-inspired palettes.
+    /// </summary>
     public static ThemePack Create()
     {
         var pack = new ThemePack
@@ -18,8 +45,14 @@ public static class BuiltInThemeCatalog
         return pack;
     }
 
+    /// <summary>
+    /// Gets the display names of all bundled CopperSkin themes.
+    /// </summary>
     public static IReadOnlyList<string> ThemeNames => Palettes.Select(static p => p.Name).ToArray();
 
+    /// <summary>
+    /// Converts one palette into a tokenized theme definition with metadata.
+    /// </summary>
     private static ThemeDefinition CreateTheme(string name, IReadOnlyDictionary<string, string> values)
     {
         var tokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -67,6 +100,9 @@ public static class BuiltInThemeCatalog
         };
     }
 
+    /// <summary>
+    /// Stores one named built-in palette and its raw color token values.
+    /// </summary>
     private sealed record Palette(string Name, IReadOnlyDictionary<string, string> Values);
 
     private static readonly Palette[] Palettes =
@@ -97,6 +133,9 @@ public static class BuiltInThemeCatalog
         P("Deep Red", "#FF0F0205", "#FF1D080D", "#FF2F1018", "#FF4A1A27", "#FF692334", "#FFFF315D", "#FFFF9BAB", "#FF80384A", "#FFFFF3F5", "#FFFFC7CF", "#FF8C5E68")
     ];
 
+    /// <summary>
+    /// Creates a compact palette entry from the fixed built-in color slots.
+    /// </summary>
     private static Palette P(string name, string deep, string panel, string control, string hover, string selected, string accent, string accentLight, string border, string textPrimary, string textSecondary, string textDisabled)
     {
         return new Palette(name, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

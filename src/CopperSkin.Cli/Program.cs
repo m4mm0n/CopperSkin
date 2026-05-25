@@ -1,3 +1,24 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : src\CopperSkin.Cli\Program.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:40:31 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : AF53EB57
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: AF53EB57
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -7,8 +28,14 @@ using QuickLog;
 
 namespace CopperSkin.Cli;
 
+/// <summary>
+/// Implements CopperSkin command-line tooling for theme export, validation, auditing, packaging, and release archives.
+/// </summary>
 public static class Program
 {
+    /// <summary>
+    /// Runs the CopperSkin CLI and returns a process-style exit code.
+    /// </summary>
     public static int Main(string[] args)
     {
         string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CopperSkin", "CliLogs");
@@ -29,6 +56,9 @@ public static class Program
         }
     }
 
+    /// <summary>
+    /// Dispatches command-line arguments to the requested CopperSkin maintenance command.
+    /// </summary>
     private static int Run(string[] args)
     {
         if (args.Length == 0 || args[0] is "-h" or "--help")
@@ -50,6 +80,9 @@ public static class Program
         };
     }
 
+    /// <summary>
+    /// Prints all bundled theme names to standard output.
+    /// </summary>
     private static int ListThemes()
     {
         foreach (string name in BuiltInThemeCatalog.ThemeNames)
@@ -57,6 +90,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Writes the built-in amChipper-inspired theme pack to a JSON file.
+    /// </summary>
     private static int ExportBuiltins(string path)
     {
         ThemeJsonSerializer.WritePack(path, BuiltInThemeCatalog.Create());
@@ -64,6 +100,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Validates a theme pack and returns all diagnostics without mutating the pack.
+    /// </summary>
     private static int Validate(string path)
     {
         ThemePack pack = File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
@@ -76,6 +115,9 @@ public static class Program
         return errors == 0 ? 0 : 2;
     }
 
+    /// <summary>
+    /// Scans a WPF source tree for hard-coded colors that bypass CopperSkin tokens.
+    /// </summary>
     private static int Audit(string root)
     {
         IReadOnlyList<AuditFinding> findings = HardCodedColorAudit.ScanDirectory(root);
@@ -86,6 +128,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Packages a theme directory into the portable CopperSkin .cskin archive format.
+    /// </summary>
     private static int Pack(string sourceDirectory, string outputPath)
     {
         ThemePackArchive.PackDirectory(sourceDirectory, outputPath);
@@ -93,6 +138,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Extracts a .cskin archive to a target directory.
+    /// </summary>
     private static int Unpack(string archivePath, string outputDirectory)
     {
         ThemePackArchive.Unpack(archivePath, outputDirectory);
@@ -100,6 +148,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Compresses a release directory into CopperSkin's custom LZHC-style archive.
+    /// </summary>
     private static int Lzhc(string sourceDirectory, string outputPath)
     {
         LzhcArchive.Create(sourceDirectory, outputPath);
@@ -107,6 +158,9 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Reports an unsupported command and prints the help text.
+    /// </summary>
     private static int Unknown(string command)
     {
         Console.Error.WriteLine($"Unknown command '{command}'.");
@@ -114,11 +168,17 @@ public static class Program
         return 1;
     }
 
+    /// <summary>
+    /// Reads an optional positional argument with a default fallback.
+    /// </summary>
     private static string Arg(string[] args, int index, string fallback)
     {
         return args.Length > index ? args[index] : fallback;
     }
 
+    /// <summary>
+    /// Prints the supported CopperSkin CLI commands.
+    /// </summary>
     private static void PrintHelp()
     {
         Console.WriteLine("CopperSkin CLI");
@@ -132,10 +192,16 @@ public static class Program
     }
 }
 
+/// <summary>
+/// Writes the current CopperSkin custom LZHC-style release archive format.
+/// </summary>
 internal static class LzhcArchive
 {
     private const string Magic = "CSLZHC1";
 
+    /// <summary>
+    /// Creates a deterministic compressed release archive from every file in a source directory.
+    /// </summary>
     public static void Create(string sourceDirectory, string outputPath)
     {
         if (!Directory.Exists(sourceDirectory))
@@ -161,7 +227,13 @@ internal static class LzhcArchive
         brotli.Write(raw, 0, raw.Length);
     }
 
+    /// <summary>
+    /// Stores one in-memory release file before it is serialized into the LZHC payload.
+    /// </summary>
     private sealed record LzhcEntry(string Path, byte[] Bytes);
 
+    /// <summary>
+    /// Stores one base64-encoded archive entry in the JSON manifest inside the compressed payload.
+    /// </summary>
     private sealed record SerializableEntry(string Path, string Data);
 }

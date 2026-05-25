@@ -1,3 +1,24 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : tests\CopperSkin.Visual.Tests\VisualSmokeTests.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:40:59 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : 4633238A
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: 4633238A
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows;
@@ -9,8 +30,14 @@ using QuickLog;
 
 namespace CopperSkin.Visual.Tests;
 
+/// <summary>
+/// Verifies that the sample and designer visual shells can be constructed without XAML runtime failures.
+/// </summary>
 public sealed class VisualSmokeTests
 {
+    /// <summary>
+    /// Verifies the Sample Rows Are Available behavior.
+    /// </summary>
     [Fact]
     public void SampleRowsAreAvailable()
     {
@@ -20,6 +47,9 @@ public sealed class VisualSmokeTests
         Assert.Equal("DWM aware", row.State);
     }
 
+    /// <summary>
+    /// Verifies the Designer And Sample Main Windows Load Xaml behavior.
+    /// </summary>
     [Fact]
     public void DesignerAndSampleMainWindowsLoadXaml()
     {
@@ -39,6 +69,9 @@ public sealed class VisualSmokeTests
         });
     }
 
+    /// <summary>
+    /// Runs a visual smoke-test action on an STA thread suitable for WPF.
+    /// </summary>
     private static void RunOnSta(Action action)
     {
         Exception? exception = null;
@@ -67,15 +100,27 @@ public sealed class VisualSmokeTests
             ExceptionDispatchInfo.Capture(exception).Throw();
     }
 
+    /// <summary>
+    /// Closes a WPF window at the end of a visual smoke-test scope.
+    /// </summary>
     private sealed class WindowScope : IDisposable
     {
+        /// <summary>
+        /// Verifies the Window Scope behavior.
+        /// </summary>
         public WindowScope(Window window)
         {
             Window = window;
         }
 
+        /// <summary>
+        /// Gets the window owned by the smoke-test scope.
+        /// </summary>
         public Window Window { get; }
 
+        /// <summary>
+        /// Releases the scope and restores or closes the owned WPF resource.
+        /// </summary>
         public void Dispose() => Window.Close();
     }
 }

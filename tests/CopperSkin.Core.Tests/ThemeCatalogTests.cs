@@ -1,10 +1,37 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : tests\CopperSkin.Core.Tests\ThemeCatalogTests.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:40:59 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : 46226BDE
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: 46226BDE
 using CopperSkin.Core.Audit;
 using CopperSkin.Core.Theming;
 
 namespace CopperSkin.Core.Tests;
 
+/// <summary>
+/// Verifies the built-in theme catalog, resolver, validator, and source audit behavior.
+/// </summary>
 public sealed class ThemeCatalogTests
 {
+    /// <summary>
+    /// Verifies the Built In Catalog Contains All Am Chipper Themes behavior.
+    /// </summary>
     [Fact]
     public void BuiltInCatalogContainsAllAmChipperThemes()
     {
@@ -16,6 +43,9 @@ public sealed class ThemeCatalogTests
         Assert.Contains(pack.Themes, theme => theme.Name == "Deep Red");
     }
 
+    /// <summary>
+    /// Verifies the Resolver Provides Legacy Aliases behavior.
+    /// </summary>
     [Fact]
     public void ResolverProvidesLegacyAliases()
     {
@@ -26,6 +56,9 @@ public sealed class ThemeCatalogTests
         Assert.Equal(theme.Get("color.text.primary"), theme.Get("TextPrimary"));
     }
 
+    /// <summary>
+    /// Verifies the Validator Accepts Built Ins behavior.
+    /// </summary>
     [Fact]
     public void ValidatorAcceptsBuiltIns()
     {
@@ -34,6 +67,9 @@ public sealed class ThemeCatalogTests
         Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == "Error");
     }
 
+    /// <summary>
+    /// Verifies the Audit Finds Hard Coded Colors behavior.
+    /// </summary>
     [Fact]
     public void AuditFindsHardCodedColors()
     {
