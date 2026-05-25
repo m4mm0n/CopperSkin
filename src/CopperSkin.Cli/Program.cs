@@ -4,7 +4,7 @@
  *  File           : src\CopperSkin.Cli\Program.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:31 +02:00
- *  Last Modified  : 2026-05-25 11:07:57 +02:00
+ *  Last Modified  : 2026-05-25 11:25:22 +02:00
  *  CRC32          : AF53EB57
  *
  *  Description    :

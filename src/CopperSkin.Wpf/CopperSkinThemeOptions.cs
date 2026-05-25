@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Wpf\CopperSkinThemeOptions.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:34:20 +02:00
- *  Last Modified  : 2026-05-25 11:21:34 +02:00
- *  CRC32          : A5E23375
+ *  Last Modified  : 2026-05-25 11:31:58 +02:00
+ *  CRC32          : 2B99D9F4
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: A5E23375
+// CRC32-BODY: 2B99D9F4
 namespace CopperSkin.Wpf;
 
 /// <summary>
@@ -42,7 +42,7 @@ public sealed class CopperSkinThemeOptions
     public bool MergeDefaultControlStyles { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether CopperWindow installs a themed client-area window context menu.
+    /// Gets or sets whether CopperWindow installs themed client-area and title-bar window context menus.
     /// </summary>
     public bool EnableWindowContextMenu { get; set; } = true;
 

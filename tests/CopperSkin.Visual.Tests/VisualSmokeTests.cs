@@ -4,8 +4,8 @@
  *  File           : tests\CopperSkin.Visual.Tests\VisualSmokeTests.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:59 +02:00
- *  Last Modified  : 2026-05-25 11:24:08 +02:00
- *  CRC32          : D03BEC61
+ *  Last Modified  : 2026-05-25 11:34:00 +02:00
+ *  CRC32          : 58481A23
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,16 +18,18 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: D03BEC61
+// CRC32-BODY: 58481A23
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
 using System.IO;
 using CopperSkin.Core.Theming;
 using CopperSkin.SampleKitchenSink;
 using CopperSkin.Wpf;
+using CopperSkin.Wpf.Controls;
 using QuickLog;
 
 namespace CopperSkin.Visual.Tests;
@@ -73,14 +75,20 @@ public sealed class VisualSmokeTests
             sample.Window.UpdateLayout();
             var themeCombo = Assert.IsType<ComboBox>(sample.Window.FindName("ThemeCombo"));
             themeCombo.ApplyTemplate();
-            var toggle = Assert.IsType<ToggleButton>(themeCombo.Template.FindName("DropDownToggle", themeCombo));
-            toggle.IsChecked = true;
+            Assert.IsType<ToggleButton>(themeCombo.Template.FindName("DropDownToggle", themeCombo));
+            themeCombo.IsDropDownOpen = true;
+            sample.Window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
             Assert.True(themeCombo.IsDropDownOpen);
             themeCombo.IsDropDownOpen = false;
 
             CopperSkinThemeManager.Current!.AttachWindow(sample.Window);
-            Assert.NotNull(sample.Window.ContextMenu);
-            Assert.Contains(sample.Window.ContextMenu.Items.OfType<MenuItem>(), item => item.Header?.ToString()?.StartsWith("About ", StringComparison.Ordinal) == true);
+            var copperWindow = Assert.IsAssignableFrom<CopperWindow>(sample.Window);
+            Assert.NotNull(copperWindow.ContextMenu);
+            Assert.Contains(copperWindow.ContextMenu.Items.OfType<MenuItem>(), item => item.Header?.ToString()?.StartsWith("About ", StringComparison.Ordinal) == true);
+
+            copperWindow.ShowWindowContextMenu(new Point(copperWindow.Left + 24, copperWindow.Top + 32));
+            Assert.True(copperWindow.ContextMenu.IsOpen);
+            copperWindow.ContextMenu.IsOpen = false;
         });
     }
 

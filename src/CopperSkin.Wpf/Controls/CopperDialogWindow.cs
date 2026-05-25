@@ -4,7 +4,7 @@
  *  File           : src\CopperSkin.Wpf\Controls\CopperDialogWindow.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:34:20 +02:00
- *  Last Modified  : 2026-05-25 11:22:42 +02:00
+ *  Last Modified  : 2026-05-25 11:25:22 +02:00
  *  CRC32          : A84A6991
  *
  *  Description    :
