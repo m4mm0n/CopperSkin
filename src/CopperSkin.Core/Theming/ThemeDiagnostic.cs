@@ -4,7 +4,7 @@
  *  File           : src\CopperSkin.Core\Theming\ThemeDiagnostic.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:31:37 +02:00
- *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  Last Modified  : 2026-05-25 11:07:57 +02:00
  *  CRC32          : 9097905F
  *
  *  Description    :

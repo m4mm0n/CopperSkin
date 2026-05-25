@@ -4,8 +4,8 @@
   File           : src\CopperSkin.Wpf\Themes\CopperSkin.Controls.xaml
   Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
   Created        : 2026-05-25 09:35:55 +02:00
-  Last Modified  : 2026-05-25 11:04:38 +02:00
-  CRC32          : AB710498
+  Last Modified  : 2026-05-25 11:23:53 +02:00
+  CRC32          : 477DF6A8
 
   Description    :
                    CopperSkin WPF theme engine markup with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
                    WPF theme engine extracted from the amChipper custom skin.
  ====================================================================================================
 -->
-<!-- CRC32-BODY: AB710498 -->
+<!-- CRC32-BODY: 477DF6A8 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
@@ -222,62 +222,97 @@
     <Setter Property="Padding" Value="8,4"/>
     <Setter Property="MinHeight" Value="30"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="IsTextSearchEnabled" Value="True"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ComboBox}">
           <Grid>
+            <ToggleButton x:Name="DropDownToggle"
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          ClickMode="Press"
+                          Focusable="False"
+                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource TemplatedParent}}">
+              <ToggleButton.Template>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                  <Border x:Name="Chrome"
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          CornerRadius="4">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="32"/>
+                      </Grid.ColumnDefinitions>
+                      <Border Background="{DynamicResource CopperSkin.PanelSheen}" CornerRadius="4,0,0,4"/>
+                      <Border Grid.Column="1"
+                              Background="{DynamicResource CopperSkin.ChromeBrush}"
+                              BorderBrush="{DynamicResource color.border.default}"
+                              BorderThickness="1,0,0,0"
+                              CornerRadius="0,3,3,0">
+                        <Path Width="9"
+                              Height="6"
+                              Stretch="Fill"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Fill="{DynamicResource color.text.primary}"
+                              Data="M 0 0 L 9 0 L 4.5 6 Z"/>
+                      </Border>
+                    </Grid>
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
+                      <Setter TargetName="Chrome" Property="Effect" Value="{DynamicResource CopperSkin.SoftGlow}"/>
+                    </Trigger>
+                    <Trigger Property="IsChecked" Value="True">
+                      <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource color.accent.light}"/>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </ToggleButton.Template>
+            </ToggleButton>
+            <ContentPresenter x:Name="ContentSite"
+                              Margin="{TemplateBinding Padding}"
+                              IsHitTestVisible="False"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              Content="{TemplateBinding SelectionBoxItem}"
+                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                              RecognizesAccessKey="True"/>
             <primitives:Popup x:Name="PART_Popup"
                               AllowsTransparency="True"
                               Focusable="False"
                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
                               Placement="Bottom"
+                              PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                               PopupAnimation="Fade">
               <Border Background="{DynamicResource color.surface.deep}"
                       BorderBrush="{DynamicResource color.accent.primary}"
                       BorderThickness="1"
+                      CornerRadius="4"
                       MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                       MaxHeight="{TemplateBinding MaxDropDownHeight}"
                       Effect="{DynamicResource CopperSkin.SoftGlow}">
-                <ScrollViewer CanContentScroll="True" Padding="2">
-                  <ItemsPresenter/>
+                <ScrollViewer CanContentScroll="True" Padding="3">
+                  <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
                 </ScrollViewer>
               </Border>
             </primitives:Popup>
-            <Border x:Name="Chrome"
-                    Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="4">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition/>
-                  <ColumnDefinition Width="30"/>
-                </Grid.ColumnDefinitions>
-                <ContentPresenter x:Name="ContentSite"
-                                  Margin="{TemplateBinding Padding}"
-                                  VerticalAlignment="Center"
-                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  Content="{TemplateBinding SelectionBoxItem}"
-                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
-                                  RecognizesAccessKey="True"/>
-                <Border Grid.Column="1" Background="{DynamicResource CopperSkin.ChromeBrush}" BorderBrush="{DynamicResource color.border.default}" BorderThickness="1,0,0,0" CornerRadius="0,3,3,0">
-                  <Path Width="9" Height="6" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{DynamicResource color.text.primary}" Data="M 0 0 L 9 0 L 4.5 6 Z"/>
-                </Border>
-              </Grid>
-            </Border>
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
-              <Setter TargetName="Chrome" Property="Effect" Value="{DynamicResource CopperSkin.SoftGlow}"/>
+              <Setter TargetName="DropDownToggle" Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
             </Trigger>
             <Trigger Property="IsDropDownOpen" Value="True">
-              <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource color.accent.light}"/>
+              <Setter TargetName="DropDownToggle" Property="BorderBrush" Value="{DynamicResource color.accent.light}"/>
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
               <Setter Property="Foreground" Value="{DynamicResource color.text.disabled}"/>
-              <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
+              <Setter TargetName="DropDownToggle" Property="Opacity" Value="0.55"/>
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -479,6 +514,25 @@
     <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource color.surface.hover}"/>
     <Setter Property="RowBackground" Value="{DynamicResource color.surface.panel}"/>
     <Setter Property="AlternatingRowBackground" Value="{DynamicResource color.surface.deep}"/>
+    <Setter Property="AlternationCount" Value="2"/>
+  </Style>
+
+  <Style TargetType="{x:Type DataGridRow}">
+    <Setter Property="Background" Value="{DynamicResource color.surface.panel}"/>
+    <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Style.Triggers>
+      <Trigger Property="AlternationIndex" Value="1">
+        <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
+      </Trigger>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource color.surface.hover}"/>
+      </Trigger>
+      <Trigger Property="IsSelected" Value="True">
+        <Setter Property="Background" Value="{DynamicResource color.surface.selected}"/>
+        <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
+      </Trigger>
+    </Style.Triggers>
   </Style>
 
   <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -493,12 +547,43 @@
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.surface.hover}"/>
     <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type DataGridCell}">
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="0,0,1,1"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="IsSelected" Value="True">
+        <Setter Property="Background" Value="{DynamicResource color.surface.selected}"/>
+        <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
+      </Trigger>
+    </Style.Triggers>
   </Style>
 
   <Style TargetType="{x:Type Menu}">
     <Setter Property="Background" Value="{DynamicResource CopperSkin.ChromeBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Menu}">
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{DynamicResource color.border.default}"
+                  BorderThickness="0,0,0,1">
+            <ItemsPresenter Margin="2,0" KeyboardNavigation.TabNavigation="Cycle"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type ContextMenu}">
@@ -506,26 +591,138 @@
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
     <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ContextMenu}">
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="4"
+                  Padding="3"
+                  Effect="{DynamicResource CopperSkin.SoftGlow}">
+            <ScrollViewer CanContentScroll="True">
+              <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+            </ScrollViewer>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type MenuItem}">
     <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
-    <Setter Property="Padding" Value="12,6"/>
-    <Style.Triggers>
-      <Trigger Property="IsHighlighted" Value="True">
-        <Setter Property="Background" Value="{DynamicResource color.surface.hover}"/>
-      </Trigger>
-      <Trigger Property="IsEnabled" Value="False">
-        <Setter Property="Foreground" Value="{DynamicResource color.text.disabled}"/>
-      </Trigger>
-    </Style.Triggers>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="Padding" Value="14,7"/>
+    <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type MenuItem}">
+          <Grid SnapsToDevicePixels="True">
+            <Border x:Name="ItemChrome"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="{TemplateBinding Padding}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ContentPresenter x:Name="IconPresenter"
+                                  Width="18"
+                                  Margin="0,0,8,0"
+                                  ContentSource="Icon"
+                                  VerticalAlignment="Center"/>
+                <ContentPresenter Grid.Column="1"
+                                  ContentSource="Header"
+                                  RecognizesAccessKey="True"
+                                  VerticalAlignment="Center"/>
+                <Path x:Name="SubmenuArrow"
+                      Grid.Column="2"
+                      Width="5"
+                      Height="8"
+                      Margin="14,0,0,0"
+                      Fill="{DynamicResource color.text.secondary}"
+                      Stretch="Fill"
+                      Visibility="Collapsed"
+                      Data="M 0 0 L 5 4 L 0 8 Z"/>
+              </Grid>
+            </Border>
+            <primitives:Popup x:Name="PART_Popup"
+                              AllowsTransparency="True"
+                              Focusable="False"
+                              IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                              Placement="Right"
+                              PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                              PopupAnimation="Fade">
+              <Border Background="{DynamicResource color.surface.deep}"
+                      BorderBrush="{DynamicResource color.accent.primary}"
+                      BorderThickness="1"
+                      CornerRadius="4"
+                      MinWidth="190"
+                      Padding="3"
+                      Effect="{DynamicResource CopperSkin.SoftGlow}">
+                <ScrollViewer CanContentScroll="True">
+                  <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                </ScrollViewer>
+              </Border>
+            </primitives:Popup>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Role" Value="TopLevelHeader">
+              <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
+              <Setter TargetName="ItemChrome" Property="Background" Value="Transparent"/>
+              <Setter TargetName="ItemChrome" Property="BorderThickness" Value="1,0"/>
+              <Setter Property="Padding" Value="18,11"/>
+              <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="Role" Value="TopLevelItem">
+              <Setter TargetName="ItemChrome" Property="Background" Value="Transparent"/>
+              <Setter TargetName="ItemChrome" Property="BorderThickness" Value="1,0"/>
+              <Setter Property="Padding" Value="18,11"/>
+              <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="Role" Value="SubmenuHeader">
+              <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="HasItems" Value="False">
+              <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource color.surface.hover}"/>
+              <Setter TargetName="ItemChrome" Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
+              <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
+            </Trigger>
+            <Trigger Property="IsSubmenuOpen" Value="True">
+              <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource color.surface.selected}"/>
+              <Setter TargetName="ItemChrome" Property="BorderBrush" Value="{DynamicResource color.accent.light}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{DynamicResource color.text.disabled}"/>
+              <Setter TargetName="ItemChrome" Property="Opacity" Value="0.55"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type Separator}">
-    <Setter Property="Background" Value="{DynamicResource color.border.default}"/>
-    <Setter Property="Height" Value="1"/>
-    <Setter Property="Margin" Value="8,4"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Separator}">
+          <Border Height="1"
+                  Margin="8,4"
+                  Background="{DynamicResource color.border.default}"
+                  Opacity="0.85"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type TabControl}">
