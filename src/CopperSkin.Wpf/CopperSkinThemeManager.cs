@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Wpf\CopperSkinThemeManager.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:34:20 +02:00
- *  Last Modified  : 2026-05-25 11:04:38 +02:00
- *  CRC32          : C11CCC8F
+ *  Last Modified  : 2026-05-25 11:21:45 +02:00
+ *  CRC32          : D7E07E14
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,10 +18,11 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: C11CCC8F
+// CRC32-BODY: D7E07E14
 using System.Windows;
 using CopperSkin.Core.Theming;
 using CopperSkin.Wpf.Chrome;
+using CopperSkin.Wpf.Controls;
 using CopperSkin.Wpf.Drawing;
 using CopperSkin.Wpf.Resources;
 
@@ -136,6 +137,8 @@ public sealed class CopperSkinThemeManager
 
         window.SourceInitialized += (_, _) => ApplyWindowChrome(window);
         window.Activated += (_, _) => ApplyWindowChrome(window);
+        if (window is CopperWindow copperWindow)
+            copperWindow.ApplyThemeOptions(_options);
         if (ActiveTheme is not null)
             ApplyWindowChrome(window);
     }
