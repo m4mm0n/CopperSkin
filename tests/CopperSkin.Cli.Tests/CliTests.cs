@@ -1,9 +1,36 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : tests\CopperSkin.Cli.Tests\CliTests.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:40:59 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : DF48E882
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: DF48E882
 using CopperSkin.Cli;
 
 namespace CopperSkin.Cli.Tests;
 
+/// <summary>
+/// Verifies the CopperSkin CLI command paths used by release packaging.
+/// </summary>
 public sealed class CliTests
 {
+    /// <summary>
+    /// Verifies the List Command Succeeds behavior.
+    /// </summary>
     [Fact]
     public void ListCommandSucceeds()
     {
@@ -12,6 +39,9 @@ public sealed class CliTests
         Assert.Equal(0, exitCode);
     }
 
+    /// <summary>
+    /// Verifies the Export And Validate Built Ins Succeeds behavior.
+    /// </summary>
     [Fact]
     public void ExportAndValidateBuiltInsSucceeds()
     {
@@ -23,6 +53,9 @@ public sealed class CliTests
         Assert.Equal(0, Program.Main(["validate", pack]));
     }
 
+    /// <summary>
+    /// Verifies the Lzhc Command Creates Release Archive behavior.
+    /// </summary>
     [Fact]
     public void LzhcCommandCreatesReleaseArchive()
     {

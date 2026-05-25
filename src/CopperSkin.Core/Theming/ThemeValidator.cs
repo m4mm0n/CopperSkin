@@ -1,7 +1,31 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : src\CopperSkin.Core\Theming\ThemeValidator.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-05-25 09:31:37 +02:00
+ *  Last Modified  : 2026-05-25 11:04:38 +02:00
+ *  CRC32          : 3C88005E
+ *
+ *  Description    :
+ *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: 3C88005E
 using System.Globalization;
 
 namespace CopperSkin.Core.Theming;
 
+/// <summary>
+/// Validates CopperSkin theme packs for identity, color syntax, required tokens, inheritance, and contrast.
+/// </summary>
 public sealed class ThemeValidator
 {
     private static readonly string[] RequiredTokens =
@@ -17,6 +41,9 @@ public sealed class ThemeValidator
         "color.text.disabled"
     ];
 
+    /// <summary>
+    /// Validates a theme pack and returns all diagnostics without mutating the pack.
+    /// </summary>
     public IReadOnlyList<ThemeDiagnostic> Validate(ThemePack pack, bool strictContrast = false)
     {
         var diagnostics = new List<ThemeDiagnostic>();
@@ -65,6 +92,9 @@ public sealed class ThemeValidator
         return diagnostics;
     }
 
+    /// <summary>
+    /// Adds WCAG-style contrast diagnostics for primary and secondary text tokens.
+    /// </summary>
     private static void AddContrastDiagnostics(ResolvedTheme theme, List<ThemeDiagnostic> diagnostics, string path, bool strict)
     {
         if (!TryParseColor(theme.Get("color.surface.panel"), out var panel) ||
@@ -85,6 +115,9 @@ public sealed class ThemeValidator
             diagnostics.Add(new ThemeDiagnostic(severity, "A11Y002", $"Secondary text contrast is {secondaryRatio:0.00}:1; expected at least 3.0:1.", $"{path}/contrast/secondary"));
     }
 
+    /// <summary>
+    /// Parses a #RRGGBB or #AARRGGBB token value into RGBA channels.
+    /// </summary>
     public static bool TryParseColor(string value, out RgbaColor color)
     {
         color = default;
@@ -106,6 +139,9 @@ public sealed class ThemeValidator
         return true;
     }
 
+    /// <summary>
+    /// Determines whether a token key should contain a parseable color value.
+    /// </summary>
     private static bool LooksColorToken(string key)
     {
         return key.StartsWith("color.", StringComparison.OrdinalIgnoreCase) ||
@@ -113,6 +149,9 @@ public sealed class ThemeValidator
                key.EndsWith("Color", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Calculates the contrast ratio between two RGBA colors.
+    /// </summary>
     private static double Contrast(RgbaColor a, RgbaColor b)
     {
         double l1 = Luminance(a) + 0.05;
@@ -120,6 +159,9 @@ public sealed class ThemeValidator
         return Math.Max(l1, l2) / Math.Min(l1, l2);
     }
 
+    /// <summary>
+    /// Calculates relative luminance for one RGBA color using sRGB channel conversion.
+    /// </summary>
     private static double Luminance(RgbaColor color)
     {
         static double Channel(byte value)
@@ -132,4 +174,7 @@ public sealed class ThemeValidator
     }
 }
 
+/// <summary>
+/// Represents a parsed color token as alpha, red, green, and blue channels.
+/// </summary>
 public readonly record struct RgbaColor(byte A, byte R, byte G, byte B);
