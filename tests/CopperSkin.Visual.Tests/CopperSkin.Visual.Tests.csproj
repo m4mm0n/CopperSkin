@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\CopperSkin.Designer\CopperSkin.Designer.csproj" />
     <ProjectReference Include="..\..\samples\CopperSkin.SampleKitchenSink\CopperSkin.SampleKitchenSink.csproj" />
   </ItemGroup>
 
