@@ -4,8 +4,8 @@
   File           : Directory.Build.props
   Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
   Created        : 2026-05-25 09:27:30 +02:00
-  Last Modified  : 2026-05-25 11:25:22 +02:00
-  CRC32          : 734FD59E
+  Last Modified  : 2026-06-04 07:03:54 +02:00
+  CRC32          : 5A956081
 
   Description    :
                    CopperSkin WPF theme engine markup with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
                    WPF theme engine extracted from the amChipper custom skin.
  ====================================================================================================
 -->
-<!-- CRC32-BODY: 734FD59E -->
+<!-- CRC32-BODY: 5A956081 -->
 <Project>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
@@ -26,6 +26,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
+    <InformationalVersion>0.2.0.0</InformationalVersion>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 </Project>
