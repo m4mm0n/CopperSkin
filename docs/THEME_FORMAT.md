@@ -7,7 +7,7 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
 ```json
 {
   "name": "CopperSkin Built-ins",
-  "version": "0.1.0",
+  "version": "0.2.0.0",
   "themes": [
     {
       "name": "Neon Tape",
@@ -39,4 +39,3 @@ Color tokens use `#AARRGGBB`. The validator reports missing required tokens, mal
 `.cskin` files are zip-based CopperSkin theme packs. They preserve directory structure and can be created or unpacked with the CLI.
 
 `.lzhc` files are CopperSkin release archives created by the CLI. The current format writes a `CSLZHC1` header followed by Brotli-compressed JSON file entries. It is meant for reproducible release packaging and can be replaced later by a lower-level LZ/Huffman codec without changing the release workflow.
-

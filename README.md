@@ -49,7 +49,13 @@ Message and task dialogs are theme-aware:
 
 ```csharp
 CopperMessageBox.Show(this, "Saved", "Theme pack exported.", "Nice");
-CopperTaskDialog.Show(this, "Validation", "No blocking theme errors.", "All Good");
+new CopperTaskDialog
+{
+    Title = "Validation",
+    Heading = "All Good",
+    Text = "No blocking theme errors.",
+    Icon = CopperTaskDialogIcon.Information
+}.Show(this);
 ```
 
 ## Theme Designer
@@ -62,6 +68,7 @@ CopperTaskDialog.Show(this, "Validation", "No blocking theme errors.", "All Good
 - diagnostics for missing tokens, malformed colors, and low contrast
 - `.json` export for theme packs
 - themed `CopperTaskDialog` preview
+- QuickLog exception hijacking with CopperSkin-themed task dialogs
 - QuickLog-based tool logging
 
 Run it from source:
@@ -93,5 +100,4 @@ dotnet test .\CopperSkin.slnx -c Release --no-build
 
 - [Control Coverage](docs/CONTROL_COVERAGE.md)
 - [Theme Format](docs/THEME_FORMAT.md)
-- [Aegis Plan](docs/aegis/plans/2026-05-25-copperskin-wpf-theme-engine.md)
-
+- [Changelog](CHANGELOG.md)

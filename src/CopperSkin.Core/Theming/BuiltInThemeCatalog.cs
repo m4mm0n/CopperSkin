@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Core\Theming\BuiltInThemeCatalog.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:31:37 +02:00
- *  Last Modified  : 2026-05-25 11:25:22 +02:00
- *  CRC32          : 509ADC30
+ *  Last Modified  : 2026-06-04 07:03:54 +02:00
+ *  CRC32          : 33059C9F
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 509ADC30
+// CRC32-BODY: 33059C9F
 // copperskin:allow-hardcoded-color-file
 namespace CopperSkin.Core.Theming;
 
@@ -36,7 +36,7 @@ public static class BuiltInThemeCatalog
         {
             Id = "copperskin.amchipper",
             Name = "CopperSkin amChipper Classics",
-            Version = "0.1.0"
+            Version = "0.2.0.0"
         };
 
         foreach (var palette in Palettes)
@@ -68,12 +68,12 @@ public static class BuiltInThemeCatalog
             ["color.text.primary"] = values["TextPrimary"],
             ["color.text.secondary"] = values["TextSecondary"],
             ["color.text.disabled"] = values["TextDisabled"],
-            ["color.status.success"] = values.TryGetValue("Success", out string? success) ? success : "#FF59D98E",
-            ["color.status.warning"] = values.TryGetValue("Warning", out string? warning) ? warning : "#FFFFCC44",
-            ["color.status.danger"] = values.TryGetValue("Danger", out string? danger) ? danger : "#FFFF4466",
+            ["color.status.success"] = values.TryGetValue("Success", out var success) ? success : "#FF59D98E",
+            ["color.status.warning"] = values.TryGetValue("Warning", out var warning) ? warning : "#FFFFCC44",
+            ["color.status.danger"] = values.TryGetValue("Danger", out var danger) ? danger : "#FFFF4466",
             ["color.editor.playhead"] = "#FFFF4444",
-            ["color.editor.grid.line"] = values.TryGetValue("GridLine", out string? line) ? line : "#FF252535",
-            ["color.editor.grid.bar"] = values.TryGetValue("GridBar", out string? bar) ? bar : "#FF303050",
+            ["color.editor.grid.line"] = values.TryGetValue("GridLine", out var line) ? line : "#FF252535",
+            ["color.editor.grid.bar"] = values.TryGetValue("GridBar", out var bar) ? bar : "#FF303050",
             ["color.editor.tracker.note"] = "#FFA0D0FF",
             ["color.editor.tracker.instrument"] = "#FFFFCC44",
             ["color.editor.tracker.volume"] = "#FF44FF88",
@@ -84,7 +84,7 @@ public static class BuiltInThemeCatalog
             ["color.editor.automation"] = values["AccentLight"]
         };
 
-        foreach (KeyValuePair<string, string> pair in values)
+        foreach (var pair in values)
             tokens[pair.Key] = pair.Value;
 
         return new ThemeDefinition
