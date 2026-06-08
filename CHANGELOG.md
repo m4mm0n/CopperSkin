@@ -7,13 +7,23 @@
 - Added CopperSkin-themed QuickLog exception dialogs to the Designer and Sample Kitchen Sink apps.
 - Added WPF dispatcher exception handling so UI-thread failures are logged and shown through CopperSkin instead of the default crash dialog.
 - Added stock Win32 icon support to `CopperTaskDialog` for application, information, warning, error, question, and shield states.
+- Added a canonical theme token catalog covering color, spacing, radius, typography, motion, effects, icons, and adapter preference tokens.
+- Added scoped WPF subtree theming through `CopperSkinThemeScope` and a fluent `CopperSkinApp` installation helper.
+- Added Windows backdrop selection for themed WPF windows.
+- Added theme-pack signing and verification helpers.
+- Added CLI commands for token catalog output, migration reports, static galleries, visual baselines, theme diffs, scaffolding, signing, signature verification, and adapter catalog output.
+- Added Designer token-catalog browsing beside live token editing and preview.
 - Added version metadata for assemblies and release packages.
 
 ### Changed
 
 - Bumped package, assembly, theme pack, and documentation examples to `0.2.0.0`.
-- Updated release notes and README examples for the current task dialog API.
+- Updated release notes, theme format documentation, and README examples for the current fluent install, scoped theme, task dialog, and CLI APIs.
+- Expanded validation to resolve inherited themes before checking required tokens and to validate known token types.
+- Expanded WPF resource emission to include typed spacing, radius, font, duration, and metric aliases.
 - Routed AppDomain and unobserved task exceptions through QuickLog's hook manager with a CopperSkin custom popup.
+- Tightened theme-pack signatures so signed metadata changes invalidate verification.
+- Restored scoped theme and preview resources from snapshots when a scoped theme is removed or a preview scope is disposed.
 
 ### Removed
 

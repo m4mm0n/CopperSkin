@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Cli\Program.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:31 +02:00
- *  Last Modified  : 2026-05-25 11:25:22 +02:00
- *  CRC32          : AF53EB57
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : 8D5F101E
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: AF53EB57
+// CRC32-BODY: 8D5F101E
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -38,7 +38,7 @@ public static class Program
     /// </summary>
     public static int Main(string[] args)
     {
-        string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CopperSkin", "CliLogs");
+        var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CopperSkin", "CliLogs");
         LogManager.ConfigureDefault(LoggerOptions.ForTool("copperskin").WithJsonLog(Path.Combine(logDir, "copperskin-cli.jsonl")));
         try
         {
@@ -70,9 +70,18 @@ public static class Program
         return args[0].ToLowerInvariant() switch
         {
             "list" => ListThemes(),
+            "tokens" => Tokens(),
             "export-builtins" => ExportBuiltins(Arg(args, 1, "themes/amchipper/theme-pack.json")),
             "validate" => Validate(Arg(args, 1, "themes/amchipper/theme-pack.json")),
             "audit" => Audit(Arg(args, 1, ".")),
+            "migrate" => Migrate(Arg(args, 1, "."), Arg(args, 2, "artifacts/copperskin-migration.md")),
+            "gallery" => Gallery(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, "artifacts/gallery")),
+            "baseline" => Baseline(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, "artifacts/visual-baseline.json")),
+            "diff" => Diff(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, "themes/amchipper/theme-pack.json")),
+            "scaffold" => Scaffold(Arg(args, 1, "artifacts/starter-theme")),
+            "sign" => Sign(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, string.Empty)),
+            "verify-signature" => VerifySignature(Arg(args, 1, "themes/amchipper/theme-pack.json")),
+            "adapters" => Adapters(),
             "pack" => Pack(Arg(args, 1, "."), Arg(args, 2, "artifacts/theme.cskin")),
             "unpack" => Unpack(Arg(args, 1, "artifacts/theme.cskin"), Arg(args, 2, "artifacts/unpacked")),
             "lzhc" => Lzhc(Arg(args, 1, "."), Arg(args, 2, "artifacts/package.lzhc")),
@@ -85,8 +94,17 @@ public static class Program
     /// </summary>
     private static int ListThemes()
     {
-        foreach (string name in BuiltInThemeCatalog.ThemeNames)
+        foreach (var name in BuiltInThemeCatalog.ThemeNames)
             Console.WriteLine(name);
+        return 0;
+    }
+
+    /// <summary>
+    /// Prints the known CopperSkin token catalog.
+    /// </summary>
+    private static int Tokens()
+    {
+        ThemeTooling.WriteTokenCatalog(Console.Out);
         return 0;
     }
 
@@ -105,12 +123,12 @@ public static class Program
     /// </summary>
     private static int Validate(string path)
     {
-        ThemePack pack = File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
-        IReadOnlyList<ThemeDiagnostic> diagnostics = new ThemeValidator().Validate(pack);
-        foreach (ThemeDiagnostic diagnostic in diagnostics)
+        var pack = File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
+        var diagnostics = new ThemeValidator().Validate(pack);
+        foreach (var diagnostic in diagnostics)
             Console.WriteLine(diagnostic);
 
-        int errors = diagnostics.Count(static d => d.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase));
+        var errors = diagnostics.Count(static d => d.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase));
         Console.WriteLine($"Validated {pack.Themes.Count} theme(s), {errors} error(s), {diagnostics.Count - errors} warning(s).");
         return errors == 0 ? 0 : 2;
     }
@@ -120,11 +138,93 @@ public static class Program
     /// </summary>
     private static int Audit(string root)
     {
-        IReadOnlyList<AuditFinding> findings = HardCodedColorAudit.ScanDirectory(root);
-        foreach (AuditFinding finding in findings)
+        var findings = HardCodedColorAudit.ScanDirectory(root);
+        foreach (var finding in findings)
             Console.WriteLine($"{finding.File}:{finding.Line}:{finding.Column} {finding.Code} {finding.Message}");
 
         Console.WriteLine($"Audit complete: {findings.Count} hard-coded color finding(s).");
+        return 0;
+    }
+
+    /// <summary>
+    /// Writes a markdown migration report with token replacement guidance.
+    /// </summary>
+    private static int Migrate(string root, string reportPath)
+    {
+        ThemeTooling.WriteMigrationReport(root, reportPath);
+        Console.WriteLine($"Migration report written to {reportPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Generates a static theme gallery and visual baseline manifest.
+    /// </summary>
+    private static int Gallery(string packPath, string outputDirectory)
+    {
+        ThemeTooling.WriteGallery(ReadPack(packPath), outputDirectory);
+        Console.WriteLine($"Gallery written to {outputDirectory}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Writes a deterministic theme token baseline for visual regression workflows.
+    /// </summary>
+    private static int Baseline(string packPath, string outputPath)
+    {
+        ThemeTooling.WriteBaseline(ReadPack(packPath), outputPath);
+        Console.WriteLine($"Baseline written to {outputPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Compares two theme packs and writes token differences.
+    /// </summary>
+    private static int Diff(string leftPath, string rightPath)
+    {
+        int changes = ThemeTooling.WriteDiff(ReadPack(leftPath), ReadPack(rightPath), Console.Out);
+        Console.WriteLine($"Diff complete: {changes} change(s).");
+        return changes == 0 ? 0 : 3;
+    }
+
+    /// <summary>
+    /// Creates a starter theme pack with every recommended CopperSkin token.
+    /// </summary>
+    private static int Scaffold(string outputDirectory)
+    {
+        ThemeTooling.Scaffold(outputDirectory);
+        Console.WriteLine($"Starter theme scaffold written to {outputDirectory}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Signs a theme pack using a deterministic SHA-256 metadata signature.
+    /// </summary>
+    private static int Sign(string packPath, string outputPath)
+    {
+        outputPath = string.IsNullOrWhiteSpace(outputPath) ? packPath : outputPath;
+        ThemePack pack = ReadPack(packPath);
+        string hash = ThemePackSigner.Sign(pack);
+        ThemeJsonSerializer.WritePack(outputPath, pack);
+        Console.WriteLine($"Signed {outputPath} with SHA-256 {hash}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Verifies a signed theme pack.
+    /// </summary>
+    private static int VerifySignature(string packPath)
+    {
+        bool valid = ThemePackSigner.Verify(ReadPack(packPath));
+        Console.WriteLine(valid ? "Signature valid." : "Signature missing or invalid.");
+        return valid ? 0 : 4;
+    }
+
+    /// <summary>
+    /// Prints adapter guidance for common WPF ecosystems.
+    /// </summary>
+    private static int Adapters()
+    {
+        ThemeTooling.WriteAdapterCatalog(Console.Out);
         return 0;
     }
 
@@ -171,10 +271,9 @@ public static class Program
     /// <summary>
     /// Reads an optional positional argument with a default fallback.
     /// </summary>
-    private static string Arg(string[] args, int index, string fallback)
-    {
-        return args.Length > index ? args[index] : fallback;
-    }
+    private static string Arg(string[] args, int index, string fallback) => args.Length > index ? args[index] : fallback;
+
+    private static ThemePack ReadPack(string path) => File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
 
     /// <summary>
     /// Prints the supported CopperSkin CLI commands.
@@ -183,9 +282,18 @@ public static class Program
     {
         Console.WriteLine("CopperSkin CLI");
         Console.WriteLine("  list");
+        Console.WriteLine("  tokens");
         Console.WriteLine("  export-builtins <theme-pack.json>");
         Console.WriteLine("  validate <theme-pack.json>");
         Console.WriteLine("  audit <wpf-source-root>");
+        Console.WriteLine("  migrate <wpf-source-root> <report.md>");
+        Console.WriteLine("  gallery <theme-pack.json> <directory>");
+        Console.WriteLine("  baseline <theme-pack.json> <visual-baseline.json>");
+        Console.WriteLine("  diff <left-theme-pack.json> <right-theme-pack.json>");
+        Console.WriteLine("  scaffold <directory>");
+        Console.WriteLine("  sign <theme-pack.json> [out.json]");
+        Console.WriteLine("  verify-signature <theme-pack.json>");
+        Console.WriteLine("  adapters");
         Console.WriteLine("  pack <directory> <out.cskin>");
         Console.WriteLine("  unpack <in.cskin> <directory>");
         Console.WriteLine("  lzhc <directory> <out.lzhc>");
@@ -207,7 +315,7 @@ internal static class LzhcArchive
         if (!Directory.Exists(sourceDirectory))
             throw new DirectoryNotFoundException(sourceDirectory);
 
-        string? directory = Path.GetDirectoryName(outputPath);
+        var directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrWhiteSpace(directory))
             Directory.CreateDirectory(directory);
 
@@ -218,7 +326,7 @@ internal static class LzhcArchive
             .OrderBy(static e => e.Path, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        byte[] raw = JsonSerializer.SerializeToUtf8Bytes(manifest.Select(static e => new SerializableEntry(e.Path, Convert.ToBase64String(e.Bytes))).ToArray());
+        var raw = JsonSerializer.SerializeToUtf8Bytes(manifest.Select(static e => new SerializableEntry(e.Path, Convert.ToBase64String(e.Bytes))).ToArray());
         using var file = File.Create(outputPath);
         using var writer = new BinaryWriter(file, Encoding.UTF8, leaveOpen: true);
         writer.Write(Encoding.ASCII.GetBytes(Magic));

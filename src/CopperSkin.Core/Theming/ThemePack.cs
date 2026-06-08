@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Core\Theming\ThemePack.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:31:37 +02:00
- *  Last Modified  : 2026-06-04 07:03:54 +02:00
- *  CRC32          : 12FE1015
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : 30E611E2
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 12FE1015
+// CRC32-BODY: 30E611E2
 namespace CopperSkin.Core.Theming;
 
 /// <summary>
@@ -40,6 +40,11 @@ public sealed class ThemePack
     /// Gets or sets the semantic version of the theme pack.
     /// </summary>
     public string Version { get; set; } = "0.2.0.0";
+
+    /// <summary>
+    /// Gets or sets package-level authoring, compatibility, signing, and gallery metadata.
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the ordered themes distributed inside this pack.
