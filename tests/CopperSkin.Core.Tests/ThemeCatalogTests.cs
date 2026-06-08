@@ -4,8 +4,8 @@
  *  File           : tests\CopperSkin.Core.Tests\ThemeCatalogTests.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:59 +02:00
- *  Last Modified  : 2026-05-25 11:25:22 +02:00
- *  CRC32          : 46226BDE
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : 89E5751B
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 46226BDE
+// CRC32-BODY: 89E5751B
 using CopperSkin.Core.Audit;
 using CopperSkin.Core.Theming;
 
@@ -35,7 +35,7 @@ public sealed class ThemeCatalogTests
     [Fact]
     public void BuiltInCatalogContainsAllAmChipperThemes()
     {
-        ThemePack pack = BuiltInThemeCatalog.Create();
+        var pack = BuiltInThemeCatalog.Create();
 
         Assert.Equal(24, pack.Themes.Count);
         Assert.Contains(pack.Themes, theme => theme.Name == "FL Grape");
@@ -49,7 +49,7 @@ public sealed class ThemeCatalogTests
     [Fact]
     public void ResolverProvidesLegacyAliases()
     {
-        ResolvedTheme theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "Copper Desk");
+        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "Copper Desk");
 
         Assert.Equal(theme.Get("color.surface.deep"), theme.Get("BgDeep"));
         Assert.Equal(theme.Get("color.accent.primary"), theme.Get("Accent"));
@@ -62,9 +62,71 @@ public sealed class ThemeCatalogTests
     [Fact]
     public void ValidatorAcceptsBuiltIns()
     {
-        IReadOnlyList<ThemeDiagnostic> diagnostics = new ThemeValidator().Validate(BuiltInThemeCatalog.Create());
+        var diagnostics = new ThemeValidator().Validate(BuiltInThemeCatalog.Create());
 
         Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == "Error");
+    }
+
+    /// <summary>
+    /// Verifies the Token Catalog Includes Platform Tokens behavior.
+    /// </summary>
+    [Fact]
+    public void TokenCatalogIncludesPlatformTokens()
+    {
+        Assert.Contains(ThemeTokenCatalog.All, token => token.Key == "spacing.md" && token.Type == ThemeTokenType.Number);
+        Assert.Contains(ThemeTokenCatalog.All, token => token.Key == "font.ui" && token.Type == ThemeTokenType.FontFamily);
+        Assert.Contains(ThemeTokenCatalog.All, token => token.Key == "motion.transition.ms" && token.Type == ThemeTokenType.Duration);
+    }
+
+    /// <summary>
+    /// Verifies the Resolver Adds Rich Derived Tokens behavior.
+    /// </summary>
+    [Fact]
+    public void ResolverAddsRichDerivedTokens()
+    {
+        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "FL Grape");
+
+        Assert.Equal("8", theme.Get("spacing.md"));
+        Assert.Equal(theme.Get("color.accent.primary"), theme.Get("color.action.default"));
+        Assert.Equal("Segoe UI", theme.Get("font.ui"));
+    }
+
+    /// <summary>
+    /// Verifies the Validator Flags Bad Platform Tokens behavior.
+    /// </summary>
+    [Fact]
+    public void ValidatorFlagsBadPlatformTokens()
+    {
+        var pack = BuiltInThemeCatalog.Create();
+        var theme = pack.Themes[0].Clone();
+        theme.Tokens["spacing.md"] = "-1";
+        theme.Tokens["unknown.token"] = "wat";
+        pack.Themes.Clear();
+        pack.Themes.Add(theme);
+
+        var diagnostics = new ThemeValidator().Validate(pack);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "TOKEN005");
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "TOKEN003");
+    }
+
+    /// <summary>
+    /// Verifies the Theme Pack Signer Round Trips behavior.
+    /// </summary>
+    [Fact]
+    public void ThemePackSignerRoundTrips()
+    {
+        var pack = BuiltInThemeCatalog.Create();
+
+        var signature = ThemePackSigner.Sign(pack, "test");
+
+        Assert.False(string.IsNullOrWhiteSpace(signature));
+        Assert.True(ThemePackSigner.Verify(pack));
+        pack.Metadata["signature.signer"] = "other";
+        Assert.False(ThemePackSigner.Verify(pack));
+        ThemePackSigner.Sign(pack, "test");
+        pack.Themes[0].Tokens["color.accent.primary"] = "#FFFFFFFF";
+        Assert.False(ThemePackSigner.Verify(pack));
     }
 
     /// <summary>
@@ -73,12 +135,12 @@ public sealed class ThemeCatalogTests
     [Fact]
     public void AuditFindsHardCodedColors()
     {
-        string root = Path.Combine(Path.GetTempPath(), "copperskin-audit-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(Path.GetTempPath(), "copperskin-audit-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        string file = Path.Combine(root, "View.xaml");
+        var file = Path.Combine(root, "View.xaml");
         File.WriteAllText(file, "<Grid Background=\"#FF000000\"/>");
 
-        IReadOnlyList<AuditFinding> findings = HardCodedColorAudit.ScanDirectory(root);
+        var findings = HardCodedColorAudit.ScanDirectory(root);
 
         Assert.Single(findings);
         Assert.Equal("CSKIN001", findings[0].Code);

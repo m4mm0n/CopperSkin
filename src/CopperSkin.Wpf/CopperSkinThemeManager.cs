@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Wpf\CopperSkinThemeManager.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:34:20 +02:00
- *  Last Modified  : 2026-05-25 11:25:22 +02:00
- *  CRC32          : D7E07E14
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : F51C44B8
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: D7E07E14
+// CRC32-BODY: F51C44B8
 using System.Windows;
 using CopperSkin.Core.Theming;
 using CopperSkin.Wpf.Chrome;
@@ -86,7 +86,7 @@ public sealed class CopperSkinThemeManager
             throw new ArgumentNullException(nameof(application));
 
         Current = new CopperSkinThemeManager(application, pack ?? BuiltInThemeCatalog.Create(), options);
-        Current.Apply("FL Grape");
+        Current.Apply(Current._options.DefaultThemeName);
         return Current;
     }
 
@@ -100,7 +100,7 @@ public sealed class CopperSkinThemeManager
     /// </summary>
     public ResolvedTheme Apply(string idOrName)
     {
-        ResolvedTheme theme = _resolver.Resolve(_pack, idOrName);
+        var theme = _resolver.Resolve(_pack, idOrName);
         CopperSkinResourceEmitter.Apply(_application.Resources, theme, _options);
         ActiveTheme = theme;
         DrawingThemeRegistry.Apply(DrawingThemeSnapshot.FromTheme(theme));
@@ -115,16 +115,35 @@ public sealed class CopperSkinThemeManager
     /// </summary>
     public IDisposable BeginPreviewScope(FrameworkElement target, string idOrName)
     {
+        return BeginThemeScope(target, idOrName);
+    }
+
+    /// <summary>
+    /// Applies a temporary scoped theme to an element and restores previous resources on disposal.
+    /// </summary>
+    public IDisposable BeginThemeScope(FrameworkElement target, string idOrName)
+    {
         if (target is null)
             throw new ArgumentNullException(nameof(target));
 
-        var previous = new ResourceDictionary();
-        foreach (object key in target.Resources.Keys)
-            previous[key] = target.Resources[key];
+        var previous = ResourceSnapshot.Capture(target.Resources);
 
-        ResolvedTheme theme = _resolver.Resolve(_pack, idOrName);
+        var theme = _resolver.Resolve(_pack, idOrName);
         CopperSkinResourceEmitter.Apply(target.Resources, theme, _options);
         return new PreviewScope(target, previous);
+    }
+
+    /// <summary>
+    /// Applies a persistent scoped theme to an element resource dictionary.
+    /// </summary>
+    public ResolvedTheme ApplyTo(FrameworkElement target, string idOrName)
+    {
+        if (target is null)
+            throw new ArgumentNullException(nameof(target));
+
+        var theme = _resolver.Resolve(_pack, idOrName);
+        CopperSkinResourceEmitter.Apply(target.Resources, theme, _options);
+        return theme;
     }
 
     /// <summary>
@@ -149,7 +168,7 @@ public sealed class CopperSkinThemeManager
     private void ApplyWindowChrome(Window window)
     {
         if (_options.ApplyNativeWindowChrome && ActiveTheme is not null)
-            _chromeService.Apply(window, ActiveTheme);
+            _chromeService.Apply(window, ActiveTheme, _options);
     }
 
     /// <summary>
@@ -158,13 +177,13 @@ public sealed class CopperSkinThemeManager
     private sealed class PreviewScope : IDisposable
     {
         private readonly FrameworkElement _target;
-        private readonly ResourceDictionary _previous;
+        private readonly ResourceSnapshot _previous;
         private bool _disposed;
 
         /// <summary>
         /// Captures the target element and its previous resources for later restoration.
         /// </summary>
-        public PreviewScope(FrameworkElement target, ResourceDictionary previous)
+        public PreviewScope(FrameworkElement target, ResourceSnapshot previous)
         {
             _target = target;
             _previous = previous;
@@ -178,10 +197,40 @@ public sealed class CopperSkinThemeManager
             if (_disposed)
                 return;
 
-            _target.Resources.Clear();
-            foreach (object key in _previous.Keys)
-                _target.Resources[key] = _previous[key];
+            _previous.Restore(_target.Resources);
             _disposed = true;
+        }
+    }
+
+    internal sealed class ResourceSnapshot
+    {
+        private ResourceSnapshot(IReadOnlyDictionary<object, object> entries, IReadOnlyList<ResourceDictionary> mergedDictionaries)
+        {
+            Entries = entries;
+            MergedDictionaries = mergedDictionaries;
+        }
+
+        public IReadOnlyDictionary<object, object> Entries { get; }
+
+        public IReadOnlyList<ResourceDictionary> MergedDictionaries { get; }
+
+        public static ResourceSnapshot Capture(ResourceDictionary resources)
+        {
+            var entries = resources.Keys
+                .Cast<object>()
+                .ToDictionary(key => key, key => resources[key]);
+            var mergedDictionaries = resources.MergedDictionaries.ToArray();
+            return new ResourceSnapshot(entries, mergedDictionaries);
+        }
+
+        public void Restore(ResourceDictionary resources)
+        {
+            resources.Clear();
+            resources.MergedDictionaries.Clear();
+            foreach (ResourceDictionary dictionary in MergedDictionaries)
+                resources.MergedDictionaries.Add(dictionary);
+            foreach (KeyValuePair<object, object> pair in Entries)
+                resources[pair.Key] = pair.Value;
         }
     }
 }

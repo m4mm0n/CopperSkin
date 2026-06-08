@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Designer\MainWindow.xaml.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:39:02 +02:00
- *  Last Modified  : 2026-05-25 11:25:22 +02:00
- *  CRC32          : 144790AE
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : 6A686334
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,13 +18,12 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 144790AE
+// CRC32-BODY: 6A686334
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using CopperSkin.Core.Theming;
-using CopperSkin.Wpf;
 using CopperSkin.Wpf.Controls;
 using Microsoft.Win32;
 using QuickLog;
@@ -50,8 +49,13 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     {
         InitializeComponent();
         Themes = new ObservableCollection<ThemeDefinition>(_runtimePack.Themes.Select(static t => t.Clone()));
-        Diagnostics = new ObservableCollection<string>();
-        Tokens = new ObservableCollection<TokenRow>();
+        Diagnostics = [];
+        Tokens = [];
+        TokenCatalog = new ObservableCollection<TokenCatalogRow>(
+            ThemeTokenCatalog.All
+                .OrderBy(static t => t.Group, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static t => t.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(static t => new TokenCatalogRow(t)));
         DataContext = this;
         ThemeList.SelectedIndex = 0;
     }
@@ -70,6 +74,11 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// Gets the token rows for the currently selected theme.
     /// </summary>
     public ObservableCollection<TokenRow> Tokens { get; }
+
+    /// <summary>
+    /// Gets the canonical token catalog shown inside the designer.
+    /// </summary>
+    public ObservableCollection<TokenCatalogRow> TokenCatalog { get; }
 
     /// <summary>
     /// Gets the validation diagnostics shown in the designer.
@@ -147,12 +156,12 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         var tempPack = new ThemePack { Id = "designer.preview", Name = "Designer Preview", Themes = [_selectedTheme.Clone()] };
         var diagnostics = new ThemeValidator().Validate(tempPack);
         Diagnostics.Clear();
-        foreach (ThemeDiagnostic diagnostic in diagnostics)
+        foreach (var diagnostic in diagnostics)
             Diagnostics.Add(diagnostic.ToString());
 
         var resolved = new ThemeResolver().Resolve(tempPack, _selectedTheme.Id);
-        CopperSkin.Wpf.Resources.CopperSkinResourceEmitter.Apply(Application.Current.Resources, resolved);
-        CopperSkin.Wpf.Drawing.DrawingThemeRegistry.Apply(CopperSkin.Wpf.Drawing.DrawingThemeSnapshot.FromTheme(resolved));
+        Wpf.Resources.CopperSkinResourceEmitter.Apply(Application.Current.Resources, resolved);
+        Wpf.Drawing.DrawingThemeRegistry.Apply(Wpf.Drawing.DrawingThemeSnapshot.FromTheme(resolved));
         StatusText = $"Previewing {_selectedTheme.Name} - {diagnostics.Count} diagnostics";
         OnPropertyChanged(nameof(StatusText));
     }
@@ -165,7 +174,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         if (_selectedTheme is null)
             return;
 
-        ThemeDefinition copy = _selectedTheme.Clone();
+        var copy = _selectedTheme.Clone();
         copy.Name = $"{copy.Name} Custom";
         copy.Id = ThemeNames.Slug(copy.Name);
         Themes.Add(copy);
@@ -181,7 +190,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         var pack = new ThemePack { Id = "designer.current", Name = "Designer Current" };
         pack.Themes.AddRange(Themes.Select(static t => t.Clone()));
         Diagnostics.Clear();
-        foreach (ThemeDiagnostic diagnostic in new ThemeValidator().Validate(pack))
+        foreach (var diagnostic in new ThemeValidator().Validate(pack))
             Diagnostics.Add(diagnostic.ToString());
         StatusText = $"Validated {pack.Themes.Count} themes";
         OnPropertyChanged(nameof(StatusText));
@@ -224,10 +233,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// <summary>
     /// Raises a property-change notification for WPF binding refresh.
     /// </summary>
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
+    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 /// <summary>
@@ -270,4 +276,53 @@ public sealed class TokenRow : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
         }
     }
+}
+
+/// <summary>
+/// Represents one read-only token definition row in the designer catalog.
+/// </summary>
+public sealed class TokenCatalogRow
+{
+    /// <summary>
+    /// Creates a designer-friendly row from a core token definition.
+    /// </summary>
+    public TokenCatalogRow(ThemeTokenDefinition definition)
+    {
+        Group = definition.Group;
+        Key = definition.Key;
+        Type = definition.Type.ToString();
+        DefaultValue = definition.DefaultValue;
+        Required = definition.Required;
+        Description = definition.Description;
+    }
+
+    /// <summary>
+    /// Gets the token family shown in the catalog grid.
+    /// </summary>
+    public string Group { get; }
+
+    /// <summary>
+    /// Gets the token key shown in the catalog grid.
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Gets the token value type shown in the catalog grid.
+    /// </summary>
+    public string Type { get; }
+
+    /// <summary>
+    /// Gets the default value emitted for this token.
+    /// </summary>
+    public string DefaultValue { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the token is required for a complete theme.
+    /// </summary>
+    public bool Required { get; }
+
+    /// <summary>
+    /// Gets the token description shown in the catalog grid.
+    /// </summary>
+    public string Description { get; }
 }

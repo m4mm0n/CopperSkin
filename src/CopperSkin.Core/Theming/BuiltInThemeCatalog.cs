@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Core\Theming\BuiltInThemeCatalog.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:31:37 +02:00
- *  Last Modified  : 2026-06-04 07:03:54 +02:00
- *  CRC32          : 33059C9F
+ *  Last Modified  : 2026-06-08 19:36:14 +02:00
+ *  CRC32          : FAF4F573
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 33059C9F
+// CRC32-BODY: FAF4F573
 // copperskin:allow-hardcoded-color-file
 namespace CopperSkin.Core.Theming;
 
@@ -36,7 +36,13 @@ public static class BuiltInThemeCatalog
         {
             Id = "copperskin.amchipper",
             Name = "CopperSkin amChipper Classics",
-            Version = "0.2.0.0"
+            Version = "0.2.0.0",
+            Metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["author"] = "ZeroLinez Softworx",
+                ["compatibility.copperskin"] = "0.2.0.0",
+                ["preview.logo"] = "mainlogo.png"
+            }
         };
 
         foreach (var palette in Palettes)
@@ -81,7 +87,36 @@ public static class BuiltInThemeCatalog
             ["color.editor.piano.white"] = "#FFF4F5FF",
             ["color.editor.piano.black"] = "#FF05050B",
             ["color.editor.clip"] = values["Accent"],
-            ["color.editor.automation"] = values["AccentLight"]
+            ["color.editor.automation"] = values["AccentLight"],
+            ["color.focus.ring"] = values["AccentLight"],
+            ["spacing.xs"] = "2",
+            ["spacing.sm"] = "4",
+            ["spacing.md"] = "8",
+            ["spacing.lg"] = "12",
+            ["spacing.xl"] = "16",
+            ["metric.radius.xs"] = "2",
+            ["metric.radius.sm"] = "4",
+            ["metric.radius.md"] = "7",
+            ["metric.radius.lg"] = "10",
+            ["metric.border.thin"] = "1",
+            ["metric.border.thick"] = "2",
+            ["metric.scrollbar.size"] = "17",
+            ["metric.density.scale"] = "1",
+            ["font.ui"] = "Segoe UI",
+            ["font.mono"] = "Consolas",
+            ["font.size.sm"] = "11",
+            ["font.size.base"] = "12",
+            ["font.size.lg"] = "15",
+            ["font.weight.normal"] = "400",
+            ["font.weight.semibold"] = "600",
+            ["motion.transition.ms"] = "120",
+            ["motion.dialog.ms"] = "140",
+            ["effect.shine.opacity"] = "0.58",
+            ["effect.shadow.opacity"] = "0.34",
+            ["effect.glow.opacity"] = "0.50",
+            ["icon.error"] = "error",
+            ["icon.warning"] = "warning",
+            ["icon.info"] = "information"
         };
 
         foreach (var pair in values)

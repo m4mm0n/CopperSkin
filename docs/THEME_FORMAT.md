@@ -8,9 +8,17 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
 {
   "name": "CopperSkin Built-ins",
   "version": "0.2.0.0",
+  "metadata": {
+    "author": "ZeroLinez Softworx",
+    "compatibility.copperskin": "0.2.0.0",
+    "signature.algorithm": "SHA-256",
+    "signature.signer": "CopperSkin",
+    "signature.createdUtc": "2026-06-08T00:00:00.0000000Z",
+    "signature.sha256": "..."
+  },
   "themes": [
     {
-      "name": "Neon Tape",
+      "name": "Neon Studio",
       "tokens": {
         "color.surface.deep": "#FF171221",
         "color.surface.panel": "#FF241B32",
@@ -24,6 +32,8 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
 
 Color tokens use `#AARRGGBB`. The validator reports missing required tokens, malformed color values, unknown tokens, and low contrast warnings.
 
+Pack and theme metadata are string dictionaries. The signer writes `signature.algorithm`, `signature.signer`, `signature.createdUtc`, and `signature.sha256`; only `signature.sha256` is excluded from the signed payload, so changing any other signature metadata invalidates verification.
+
 ## Core Token Families
 
 - `color.surface.*`: app, panel, control, hover, and selected backgrounds
@@ -31,8 +41,37 @@ Color tokens use `#AARRGGBB`. The validator reports missing required tokens, mal
 - `color.border.default`: shared chrome/control border
 - `color.text.*`: primary, secondary, and disabled text
 - `color.status.*`: success, warning, danger
-- `effect.glow.*`: glow color and opacity
-- `drawing.*`: tracker/grid/waveform/custom drawing colors
+- `color.action.*` and `color.focus.ring`: button states and keyboard focus
+- `color.editor.*`: tracker, piano roll, clip, and automation drawing colors
+- `spacing.*`: spacing units emitted as numeric and `Thickness` resources
+- `metric.radius.*`: corner radii emitted as numeric and `CornerRadius` resources
+- `metric.border.*`, `metric.scrollbar.size`, `metric.density.scale`: density and chrome sizing
+- `font.*`: UI and mono font families, sizes, and weights
+- `motion.*.ms`: transition durations emitted as WPF `Duration` resources
+- `effect.*.opacity`: shine, shadow, and glow intensity
+- `icon.*`: symbolic icon keys for themed dialog surfaces
+- `adapter.*`: integration preferences for common WPF control libraries
+
+Run `CopperSkin.Cli tokens` to print the canonical token catalog with type, default value, and required/recommended status.
+
+## Validation And Tooling
+
+The CLI can validate packs, create starter themes, sign packs, verify signatures, compare token differences, produce static galleries, and write deterministic visual baselines:
+
+```powershell
+CopperSkin.Cli validate .\themes\amchipper\theme-pack.json
+CopperSkin.Cli tokens
+CopperSkin.Cli scaffold .\artifacts\starter-theme
+CopperSkin.Cli sign .\themes\amchipper\theme-pack.json .\artifacts\signed-theme-pack.json
+CopperSkin.Cli verify-signature .\artifacts\signed-theme-pack.json
+CopperSkin.Cli gallery .\themes\amchipper\theme-pack.json .\artifacts\gallery
+CopperSkin.Cli baseline .\themes\amchipper\theme-pack.json .\artifacts\visual-baseline.json
+CopperSkin.Cli diff .\themes\amchipper\theme-pack.json .\themes\custom\theme-pack.json
+CopperSkin.Cli migrate .\src .\artifacts\migration.md
+CopperSkin.Cli adapters
+```
+
+Gallery output is plain HTML plus a `visual-baseline.json` manifest. Baselines are deterministic JSON snapshots of resolved theme tokens and pack hashes for visual regression workflows.
 
 ## Archives
 
