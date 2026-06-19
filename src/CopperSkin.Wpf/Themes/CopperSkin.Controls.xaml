@@ -221,7 +221,11 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Padding" Value="8,4"/>
     <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
     <Setter Property="IsTextSearchEnabled" Value="True"/>
     <Setter Property="Template">
       <Setter.Value>
@@ -279,6 +283,7 @@
                               IsHitTestVisible="False"
                               VerticalAlignment="Center"
                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              TextElement.Foreground="{TemplateBinding Foreground}"
                               Content="{TemplateBinding SelectionBoxItem}"
                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                               ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
@@ -499,10 +504,109 @@
     <Setter Property="Background" Value="{DynamicResource color.surface.panel}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="4"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
   </Style>
+
   <Style TargetType="{x:Type TreeViewItem}">
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
-    <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding" Value="3,2"/>
+    <Setter Property="MinHeight" Value="24"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type TreeViewItem}">
+          <Grid SnapsToDevicePixels="True">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition/>
+            </Grid.RowDefinitions>
+            <ToggleButton x:Name="Expander"
+                          Width="18"
+                          Height="24"
+                          Margin="0,0,2,0"
+                          IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                          ClickMode="Press"
+                          Focusable="False">
+              <ToggleButton.Template>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                  <Grid Background="Transparent">
+                    <Path x:Name="Arrow"
+                          Width="7"
+                          Height="7"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M 0 0 L 0 7 L 5 3.5 Z"
+                          Fill="{DynamicResource color.text.secondary}"
+                          Stretch="Fill"/>
+                  </Grid>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsChecked" Value="True">
+                      <Setter TargetName="Arrow" Property="RenderTransform">
+                        <Setter.Value>
+                          <RotateTransform Angle="90" CenterX="3.5" CenterY="3.5"/>
+                        </Setter.Value>
+                      </Setter>
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="Arrow" Property="Fill" Value="{DynamicResource color.accent.primary}"/>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </ToggleButton.Template>
+            </ToggleButton>
+            <Border x:Name="Selection"
+                    Grid.Column="1"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="Transparent"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="{TemplateBinding Padding}">
+              <ContentPresenter x:Name="PART_Header"
+                                ContentSource="Header"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+            </Border>
+            <ItemsPresenter x:Name="ItemsHost"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="13,1,0,0"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="HasItems" Value="False">
+              <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+            </Trigger>
+            <Trigger Property="IsExpanded" Value="False">
+              <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Selection" Property="Background" Value="{DynamicResource color.surface.hover}"/>
+              <Setter TargetName="Selection" Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter TargetName="Selection" Property="Background" Value="{DynamicResource color.surface.selected}"/>
+              <Setter TargetName="Selection" Property="BorderBrush" Value="{DynamicResource color.accent.primary}"/>
+              <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{DynamicResource color.text.disabled}"/>
+              <Setter TargetName="Selection" Property="Opacity" Value="0.55"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type DataGrid}">
