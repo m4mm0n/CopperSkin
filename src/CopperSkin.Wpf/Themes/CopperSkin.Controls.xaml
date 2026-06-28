@@ -1017,51 +1017,97 @@
   <Style TargetType="{x:Type ScrollBar}">
     <Setter Property="Background" Value="{DynamicResource color.surface.control}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.accent.primary}"/>
-    <Setter Property="Width" Value="15"/>
-    <Setter Property="MinWidth" Value="15"/>
+    <Setter Property="Width" Value="14"/>
+    <Setter Property="MinWidth" Value="14"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ScrollBar}">
-          <Grid x:Name="Root" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+          <Grid x:Name="Root" Background="{TemplateBinding Background}" SnapsToDevicePixels="True" ClipToBounds="True">
             <Grid.RowDefinitions>
-              <RowDefinition Height="15"/>
-              <RowDefinition Height="*"/>
-              <RowDefinition Height="15"/>
+              <RowDefinition x:Name="DecreaseRow" Height="14"/>
+              <RowDefinition x:Name="TrackRow" Height="*"/>
+              <RowDefinition x:Name="IncreaseRow" Height="14"/>
             </Grid.RowDefinitions>
-            <RepeatButton x:Name="LineUpButton" Grid.Row="0" Command="{x:Static ScrollBar.LineUpCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="{DynamicResource color.surface.panel}">
-              <Path Width="7" Height="5" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Data="M 0 5 L 3.5 0 L 7 5 Z"/>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition x:Name="DecreaseColumn" Width="*"/>
+              <ColumnDefinition x:Name="TrackColumn" Width="0"/>
+              <ColumnDefinition x:Name="IncreaseColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <RepeatButton x:Name="LineDecreaseButton"
+                          Grid.Row="0"
+                          Grid.Column="0"
+                          Command="{x:Static ScrollBar.LineUpCommand}"
+                          Style="{StaticResource CopperSkin.FlatRepeatButton}"
+                          Background="{DynamicResource color.surface.panel}">
+              <Grid>
+                <Path x:Name="DecreaseVerticalGlyph" Width="7" Height="5" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Data="M 0 5 L 3.5 0 L 7 5 Z"/>
+                <Path x:Name="DecreaseHorizontalGlyph" Width="5" Height="7" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Visibility="Collapsed" Data="M 5 0 L 0 3.5 L 5 7 Z"/>
+              </Grid>
             </RepeatButton>
-            <Border Grid.Row="1" Background="{DynamicResource color.surface.deep}" BorderBrush="{DynamicResource color.border.default}" BorderThickness="1,0">
-              <primitives:Track x:Name="PART_Track" IsDirectionReversed="True">
+            <Border x:Name="TrackHost"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Background="{DynamicResource color.surface.deep}"
+                    BorderBrush="{DynamicResource color.border.default}"
+                    BorderThickness="1,0">
+              <primitives:Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True">
                 <primitives:Track.DecreaseRepeatButton>
-                  <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="Transparent"/>
+                  <RepeatButton x:Name="PageDecreaseButton" Command="{x:Static ScrollBar.PageUpCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="Transparent"/>
                 </primitives:Track.DecreaseRepeatButton>
                 <primitives:Track.Thumb>
                   <primitives:Thumb Margin="2" Background="{DynamicResource color.accent.primary}" BorderBrush="{DynamicResource color.accent.light}"/>
                 </primitives:Track.Thumb>
                 <primitives:Track.IncreaseRepeatButton>
-                  <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="Transparent"/>
+                  <RepeatButton x:Name="PageIncreaseButton" Command="{x:Static ScrollBar.PageDownCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="Transparent"/>
                 </primitives:Track.IncreaseRepeatButton>
               </primitives:Track>
             </Border>
-            <RepeatButton x:Name="LineDownButton" Grid.Row="2" Command="{x:Static ScrollBar.LineDownCommand}" Style="{StaticResource CopperSkin.FlatRepeatButton}" Background="{DynamicResource color.surface.panel}">
-              <Path Width="7" Height="5" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Data="M 0 0 L 7 0 L 3.5 5 Z"/>
+            <RepeatButton x:Name="LineIncreaseButton"
+                          Grid.Row="2"
+                          Grid.Column="0"
+                          Command="{x:Static ScrollBar.LineDownCommand}"
+                          Style="{StaticResource CopperSkin.FlatRepeatButton}"
+                          Background="{DynamicResource color.surface.panel}">
+              <Grid>
+                <Path x:Name="IncreaseVerticalGlyph" Width="7" Height="5" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Data="M 0 0 L 7 0 L 3.5 5 Z"/>
+                <Path x:Name="IncreaseHorizontalGlyph" Width="5" Height="7" Fill="{DynamicResource color.text.secondary}" Stretch="Fill" Visibility="Collapsed" Data="M 0 0 L 5 3.5 L 0 7 Z"/>
+              </Grid>
             </RepeatButton>
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="Orientation" Value="Horizontal">
               <Setter Property="Width" Value="Auto"/>
               <Setter Property="MinWidth" Value="0"/>
-              <Setter Property="Height" Value="15"/>
-              <Setter Property="MinHeight" Value="15"/>
-              <Setter TargetName="Root" Property="LayoutTransform">
-                <Setter.Value>
-                  <RotateTransform Angle="-90"/>
-                </Setter.Value>
-              </Setter>
+              <Setter Property="Height" Value="14"/>
+              <Setter Property="MinHeight" Value="14"/>
+              <Setter TargetName="DecreaseRow" Property="Height" Value="*"/>
+              <Setter TargetName="TrackRow" Property="Height" Value="0"/>
+              <Setter TargetName="IncreaseRow" Property="Height" Value="0"/>
+              <Setter TargetName="DecreaseColumn" Property="Width" Value="14"/>
+              <Setter TargetName="TrackColumn" Property="Width" Value="*"/>
+              <Setter TargetName="IncreaseColumn" Property="Width" Value="14"/>
+              <Setter TargetName="LineDecreaseButton" Property="Grid.Row" Value="0"/>
+              <Setter TargetName="LineDecreaseButton" Property="Grid.Column" Value="0"/>
+              <Setter TargetName="TrackHost" Property="Grid.Row" Value="0"/>
+              <Setter TargetName="TrackHost" Property="Grid.Column" Value="1"/>
+              <Setter TargetName="TrackHost" Property="BorderThickness" Value="0,1"/>
+              <Setter TargetName="LineIncreaseButton" Property="Grid.Row" Value="0"/>
+              <Setter TargetName="LineIncreaseButton" Property="Grid.Column" Value="2"/>
+              <Setter TargetName="LineDecreaseButton" Property="Command" Value="{x:Static ScrollBar.LineLeftCommand}"/>
+              <Setter TargetName="LineIncreaseButton" Property="Command" Value="{x:Static ScrollBar.LineRightCommand}"/>
+              <Setter TargetName="PageDecreaseButton" Property="Command" Value="{x:Static ScrollBar.PageLeftCommand}"/>
+              <Setter TargetName="PageIncreaseButton" Property="Command" Value="{x:Static ScrollBar.PageRightCommand}"/>
+              <Setter TargetName="DecreaseVerticalGlyph" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="IncreaseVerticalGlyph" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="DecreaseHorizontalGlyph" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="IncreaseHorizontalGlyph" Property="Visibility" Value="Visible"/>
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Root" Property="Effect" Value="{DynamicResource CopperSkin.SoftGlow}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
