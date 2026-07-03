@@ -4,8 +4,8 @@
  *  File           : tests\CopperSkin.Core.Tests\ThemeCatalogTests.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:59 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 89E5751B
+ *  Last Modified  : 2026-07-03 09:57:50 +02:00
+ *  CRC32          : 13CBDA55
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,8 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 89E5751B
+// CRC32-BODY: 13CBDA55
+
 using CopperSkin.Core.Audit;
 using CopperSkin.Core.Theming;
 
@@ -117,16 +118,21 @@ public sealed class ThemeCatalogTests
     public void ThemePackSignerRoundTrips()
     {
         var pack = BuiltInThemeCatalog.Create();
+        ThemePackSigningKeyPair keyPair = ThemePackSigner.CreateKeyPair();
 
-        var signature = ThemePackSigner.Sign(pack, "test");
+        var signature = ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
 
         Assert.False(string.IsNullOrWhiteSpace(signature));
-        Assert.True(ThemePackSigner.Verify(pack));
+        Assert.True(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
+        Assert.Equal("ECDSA-GF2M-B233-SHA256", pack.Metadata[ThemePackSigner.AlgorithmKey]);
+        Assert.StartsWith("04", pack.Metadata[ThemePackSigner.PublicKeyKey], StringComparison.Ordinal);
         pack.Metadata["signature.signer"] = "other";
-        Assert.False(ThemePackSigner.Verify(pack));
-        ThemePackSigner.Sign(pack, "test");
+        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
+        ThemePackSigningKeyPair otherKeyPair = ThemePackSigner.CreateKeyPair();
+        ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
+        Assert.False(ThemePackSigner.Verify(pack, otherKeyPair.PublicKeyHex));
         pack.Themes[0].Tokens["color.accent.primary"] = "#FFFFFFFF";
-        Assert.False(ThemePackSigner.Verify(pack));
+        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
     }
 
     /// <summary>

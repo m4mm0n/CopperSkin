@@ -4,8 +4,8 @@
  *  File           : tests\CopperSkin.Cli.Tests\CliTests.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:59 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 9F48A340
+ *  Last Modified  : 2026-07-03 09:57:50 +02:00
+ *  CRC32          : CAEB1B27
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,7 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 9F48A340
+// CRC32-BODY: CAEB1B27
 
 namespace CopperSkin.Cli.Tests;
 
@@ -63,13 +63,18 @@ public sealed class CliTests
         var pack = Path.Combine(scaffold, "theme-pack.json");
         var gallery = Path.Combine(root, "gallery");
         var baseline = Path.Combine(root, "visual-baseline.json");
+        var privateKey = Path.Combine(root, "signing.private");
+        var publicKey = Path.Combine(root, "signing.public");
 
         Assert.Equal(0, Program.Main(["tokens"]));
         Assert.Equal(0, Program.Main(["adapters"]));
         Assert.Equal(0, Program.Main(["scaffold", scaffold]));
         Assert.True(File.Exists(pack));
-        Assert.Equal(0, Program.Main(["sign", pack]));
-        Assert.Equal(0, Program.Main(["verify-signature", pack]));
+        Assert.Equal(0, Program.Main(["keygen", privateKey, publicKey]));
+        Assert.True(File.Exists(privateKey));
+        Assert.True(File.Exists(publicKey));
+        Assert.Equal(0, Program.Main(["sign", pack, pack, privateKey]));
+        Assert.Equal(0, Program.Main(["verify-signature", pack, publicKey]));
         Assert.Equal(0, Program.Main(["gallery", pack, gallery]));
         Assert.True(File.Exists(Path.Combine(gallery, "index.html")));
         Assert.True(File.Exists(Path.Combine(gallery, "visual-baseline.json")));

@@ -12,15 +12,18 @@ Release candidate for the reusable CopperSkin engine, designer, CLI, sample app,
 - The runtime now includes a canonical token catalog for colors, spacing, radii, typography, motion, effects, icons, and adapter hints.
 - The CLI now creates static theme galleries, deterministic visual baselines, starter theme scaffolds, token diffs, migration reports, and signed theme packs.
 - The Designer includes a browsable token catalog beside live token editing and preview.
+- Theme-pack signing now uses no-dependency B-233 binary-field ECDSA metadata with reusable key generation and trusted public-key verification.
+- Standard WPF styling coverage now includes broader shell, item, document, popup, data-grid, toolbar, resize, and text surfaces.
+- The Designer preview now includes a full standard-control tab and an in-studio QuickLog-backed event log.
 - Release-internal planning notes were removed from public docs.
 - Package, assembly, theme pack, and release metadata were bumped to `0.2.0.0`.
 
 ## Included
 
-- `CopperSkin.Core` typed token model, token catalog, theme resolver, validator, JSON serializer, signature helper, theme archive, and hard-coded color audit
-- `CopperSkin.Wpf` WPF runtime with dynamic resources, scoped themes, Windows backdrop selection, implicit standard-control styles, custom chrome support, `CopperWindow`, `CopperMessageBox`, and `CopperTaskDialog`
-- `CopperSkin.Designer` theme creation tool with live preview, token editing, catalog browsing, diagnostics, export, engine logo, QuickLog logging, and themed exception dialogs
-- `CopperSkin.Cli` commands for theme listing, token catalog output, export, validation, audit, migration reports, gallery, baseline, diff, scaffold, signing, adapters, `.cskin`, and `.lzhc`
+- `CopperSkin.Core` typed token model, token catalog, theme resolver, validator, JSON serializer, B-233 ECDSA signature helper, theme archive, and hard-coded color audit
+- `CopperSkin.Wpf` WPF runtime with dynamic resources, scoped themes, Windows backdrop selection, broad implicit standard-control styles, custom chrome support, `CopperWindow`, `CopperMessageBox`, and `CopperTaskDialog`
+- `CopperSkin.Designer` theme creation tool with live preview, standard-control preview, token editing, catalog browsing, diagnostics, event log, export, engine logo, QuickLog logging, and themed exception dialogs
+- `CopperSkin.Cli` commands for theme listing, token catalog output, export, validation, audit, migration reports, gallery, baseline, diff, scaffold, key generation, signing, signature verification, adapters, `.cskin`, and `.lzhc`
 - `CopperSkin.SampleKitchenSink` WPF preview app
 - built-in amChipper-inspired theme pack with 24 themes
 - NuGet packages for the reusable engine libraries

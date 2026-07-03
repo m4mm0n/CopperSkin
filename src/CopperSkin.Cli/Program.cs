@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Cli\Program.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:31 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 8D5F101E
+ *  Last Modified  : 2026-07-03 09:57:50 +02:00
+ *  CRC32          : 0CF752A0
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,8 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 8D5F101E
+// CRC32-BODY: 0CF752A0
+
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -79,8 +80,9 @@ public static class Program
             "baseline" => Baseline(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, "artifacts/visual-baseline.json")),
             "diff" => Diff(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, "themes/amchipper/theme-pack.json")),
             "scaffold" => Scaffold(Arg(args, 1, "artifacts/starter-theme")),
-            "sign" => Sign(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, string.Empty)),
-            "verify-signature" => VerifySignature(Arg(args, 1, "themes/amchipper/theme-pack.json")),
+            "keygen" => Keygen(Arg(args, 1, "artifacts/copperskin-signing.private"), Arg(args, 2, "artifacts/copperskin-signing.public")),
+            "sign" => Sign(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, string.Empty), Arg(args, 3, string.Empty)),
+            "verify-signature" => VerifySignature(Arg(args, 1, "themes/amchipper/theme-pack.json"), Arg(args, 2, string.Empty)),
             "adapters" => Adapters(),
             "pack" => Pack(Arg(args, 1, "."), Arg(args, 2, "artifacts/theme.cskin")),
             "unpack" => Unpack(Arg(args, 1, "artifacts/theme.cskin"), Arg(args, 2, "artifacts/unpacked")),
@@ -197,24 +199,39 @@ public static class Program
     }
 
     /// <summary>
-    /// Signs a theme pack using a deterministic SHA-256 metadata signature.
+    /// Generates a reusable B-233 signing key pair.
     /// </summary>
-    private static int Sign(string packPath, string outputPath)
+    private static int Keygen(string privateKeyPath, string publicKeyPath)
+    {
+        ThemePackSigningKeyPair keyPair = ThemePackSigner.CreateKeyPair();
+        WriteSecret(privateKeyPath, keyPair.PrivateKeyHex);
+        WriteText(publicKeyPath, keyPair.PublicKeyHex);
+        Console.WriteLine($"Private key written to {privateKeyPath}");
+        Console.WriteLine($"Public key written to {publicKeyPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Signs a theme pack using a B-233 binary-field ECDSA metadata signature.
+    /// </summary>
+    private static int Sign(string packPath, string outputPath, string privateKeyPath)
     {
         outputPath = string.IsNullOrWhiteSpace(outputPath) ? packPath : outputPath;
         ThemePack pack = ReadPack(packPath);
-        string hash = ThemePackSigner.Sign(pack);
+        string? privateKey = string.IsNullOrWhiteSpace(privateKeyPath) ? null : File.ReadAllText(privateKeyPath).Trim();
+        string signature = ThemePackSigner.Sign(pack, privateKeyHex: privateKey);
         ThemeJsonSerializer.WritePack(outputPath, pack);
-        Console.WriteLine($"Signed {outputPath} with SHA-256 {hash}");
+        Console.WriteLine($"Signed {outputPath} with {pack.Metadata[ThemePackSigner.AlgorithmKey]} {signature}");
         return 0;
     }
 
     /// <summary>
     /// Verifies a signed theme pack.
     /// </summary>
-    private static int VerifySignature(string packPath)
+    private static int VerifySignature(string packPath, string publicKeyPath)
     {
-        bool valid = ThemePackSigner.Verify(ReadPack(packPath));
+        string? trustedPublicKey = string.IsNullOrWhiteSpace(publicKeyPath) ? null : File.ReadAllText(publicKeyPath).Trim();
+        bool valid = ThemePackSigner.Verify(ReadPack(packPath), trustedPublicKey);
         Console.WriteLine(valid ? "Signature valid." : "Signature missing or invalid.");
         return valid ? 0 : 4;
     }
@@ -291,12 +308,36 @@ public static class Program
         Console.WriteLine("  baseline <theme-pack.json> <visual-baseline.json>");
         Console.WriteLine("  diff <left-theme-pack.json> <right-theme-pack.json>");
         Console.WriteLine("  scaffold <directory>");
-        Console.WriteLine("  sign <theme-pack.json> [out.json]");
-        Console.WriteLine("  verify-signature <theme-pack.json>");
+        Console.WriteLine("  keygen <private.key> <public.key>");
+        Console.WriteLine("  sign <theme-pack.json> [out.json] [private.key]");
+        Console.WriteLine("  verify-signature <theme-pack.json> [public.key]");
         Console.WriteLine("  adapters");
         Console.WriteLine("  pack <directory> <out.cskin>");
         Console.WriteLine("  unpack <in.cskin> <directory>");
         Console.WriteLine("  lzhc <directory> <out.lzhc>");
+    }
+
+    private static void WriteText(string path, string value)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+        File.WriteAllText(path, value);
+    }
+
+    private static void WriteSecret(string path, string value)
+    {
+        WriteText(path, value);
+        try
+        {
+            File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 }
 
