@@ -11,10 +11,12 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
   "metadata": {
     "author": "ZeroLinez Softworx",
     "compatibility.copperskin": "0.2.0.0",
-    "signature.algorithm": "SHA-256",
+    "signature.algorithm": "ECDSA-GF2M-B233-SHA256",
+    "signature.curve": "NIST-B-233",
     "signature.signer": "CopperSkin",
-    "signature.createdUtc": "2026-06-08T00:00:00.0000000Z",
-    "signature.sha256": "..."
+    "signature.createdUtc": "2026-07-03T00:00:00.0000000Z",
+    "signature.eccgf2.publicKey": "04...",
+    "signature.eccgf2.signature": "..."
   },
   "themes": [
     {
@@ -32,7 +34,7 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
 
 Color tokens use `#AARRGGBB`. The validator reports missing required tokens, malformed color values, unknown tokens, and low contrast warnings.
 
-Pack and theme metadata are string dictionaries. The signer writes `signature.algorithm`, `signature.signer`, `signature.createdUtc`, and `signature.sha256`; only `signature.sha256` is excluded from the signed payload, so changing any other signature metadata invalidates verification.
+Pack and theme metadata are string dictionaries. The signer writes `signature.algorithm`, `signature.curve`, `signature.signer`, `signature.createdUtc`, `signature.eccgf2.publicKey`, and `signature.eccgf2.signature`. Only `signature.eccgf2.signature` is excluded from the signed payload, so changing signed metadata, tokens, theme names, or the embedded public key invalidates verification. For authenticity, verify with a trusted public key file instead of only trusting the embedded public key.
 
 ## Core Token Families
 
@@ -62,8 +64,9 @@ The CLI can validate packs, create starter themes, sign packs, verify signatures
 CopperSkin.Cli validate .\themes\amchipper\theme-pack.json
 CopperSkin.Cli tokens
 CopperSkin.Cli scaffold .\artifacts\starter-theme
-CopperSkin.Cli sign .\themes\amchipper\theme-pack.json .\artifacts\signed-theme-pack.json
-CopperSkin.Cli verify-signature .\artifacts\signed-theme-pack.json
+CopperSkin.Cli keygen .\artifacts\signing.private .\artifacts\signing.public
+CopperSkin.Cli sign .\themes\amchipper\theme-pack.json .\artifacts\signed-theme-pack.json .\artifacts\signing.private
+CopperSkin.Cli verify-signature .\artifacts\signed-theme-pack.json .\artifacts\signing.public
 CopperSkin.Cli gallery .\themes\amchipper\theme-pack.json .\artifacts\gallery
 CopperSkin.Cli baseline .\themes\amchipper\theme-pack.json .\artifacts\visual-baseline.json
 CopperSkin.Cli diff .\themes\amchipper\theme-pack.json .\themes\custom\theme-pack.json

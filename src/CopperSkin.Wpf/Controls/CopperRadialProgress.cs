@@ -1,3 +1,25 @@
+/*
+ * ====================================================================================================
+ *  Project        : CopperSkin
+ *  File           : src\CopperSkin.Wpf\Controls\CopperRadialProgress.cs
+ *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
+ *  Created        : 2026-06-28 01:31:17 +02:00
+ *  Last Modified  : 2026-07-03 09:59:32 +02:00
+ *  CRC32          : F2B79739
+ *
+ *  Description    :
+ *                   Renders a theme-aware circular progress indicator for long-running CopperSkin workflows.
+ *
+ *  License        :
+ *                   MIT
+ *                   https://opensource.org/licenses/MIT
+ *
+ *  Notes          :
+ *                   WPF theme engine extracted from the amChipper custom skin.
+ * ====================================================================================================
+ */
+// CRC32-BODY: F2B79739
+
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -75,10 +97,10 @@ public sealed class CopperRadialProgress : Control
         var center = new Point(ActualWidth / 2d, ActualHeight / 2d);
         var thickness = Math.Max(8d, size * 0.075d);
         var radius = (size - thickness) / 2d;
-        var trackBrush = GetBrush("color.surface.hover", Color.FromRgb(30, 43, 55));
-        var accentBrush = GetBrush("color.status.danger", Color.FromRgb(255, 46, 95));
-        var textBrush = GetBrush("color.text.primary", Colors.White);
-        var secondaryBrush = GetBrush("color.text.secondary", Color.FromRgb(147, 165, 180));
+        var trackBrush = GetBrush("color.surface.hover", SystemColors.ControlDarkBrush);
+        var accentBrush = GetBrush("color.status.danger", SystemColors.HighlightBrush);
+        var textBrush = GetBrush("color.text.primary", SystemColors.ControlTextBrush);
+        var secondaryBrush = GetBrush("color.text.secondary", SystemColors.GrayTextBrush);
 
         drawingContext.DrawEllipse(null, new Pen(trackBrush, thickness), center, radius, radius);
 
@@ -132,8 +154,8 @@ public sealed class CopperRadialProgress : Control
         drawingContext.DrawText(formatted, new Point((ActualWidth - formatted.Width) / 2d, baselineCenterY - formatted.Height / 2d));
     }
 
-    private Brush GetBrush(string resourceKey, Color fallback)
+    private Brush GetBrush(string resourceKey, Brush fallback)
     {
-        return TryFindResource(resourceKey) as Brush ?? new SolidColorBrush(fallback);
+        return TryFindResource(resourceKey) as Brush ?? fallback;
     }
 }

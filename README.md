@@ -73,13 +73,14 @@ new CopperTaskDialog
 
 - built-in amChipper theme selection
 - live token grid editing
+- real standard-control preview tab covering forms, collections, data, documents, menus, toolbars, calendar, and ink surfaces
 - browsable canonical token catalog
 - instant WPF preview using the real runtime resource emitter
 - diagnostics for missing tokens, malformed colors, and low contrast
 - `.json` export for theme packs
 - themed `CopperTaskDialog` preview
 - QuickLog exception hijacking with CopperSkin-themed task dialogs
-- QuickLog-based tool logging
+- QuickLog-backed event logging with an in-studio log pane
 
 Run it from source:
 
@@ -100,8 +101,9 @@ dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f ne
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- baseline .\themes\amchipper\theme-pack.json .\artifacts\visual-baseline.json
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- diff .\themes\amchipper\theme-pack.json .\themes\custom\theme-pack.json
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- scaffold .\artifacts\starter-theme
-dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- sign .\themes\amchipper\theme-pack.json .\artifacts\signed-theme-pack.json
-dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- verify-signature .\artifacts\signed-theme-pack.json
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- keygen .\artifacts\signing.private .\artifacts\signing.public
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- sign .\themes\amchipper\theme-pack.json .\artifacts\signed-theme-pack.json .\artifacts\signing.private
+dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- verify-signature .\artifacts\signed-theme-pack.json .\artifacts\signing.public
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- adapters
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- pack .\themes\amchipper .\artifacts\CopperSkin.AmChipper.cskin
 dotnet run --project .\src\CopperSkin.Cli\CopperSkin.Cli.csproj -c Release -f net10.0 -- lzhc .\Ready2Release .\Ready2Release\CopperSkin.Ready2Release.lzhc

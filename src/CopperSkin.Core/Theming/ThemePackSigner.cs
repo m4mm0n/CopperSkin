@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Core\Theming\ThemePackSigner.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-06-08 00:00:00 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : F200F33C
+ *  Last Modified  : 2026-07-03 09:57:50 +02:00
+ *  CRC32          : 7C0D85A7
  *
  *  Description    :
  *                   Computes deterministic CopperSkin theme-pack signatures.
@@ -18,52 +18,106 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: F200F33C
+// CRC32-BODY: 7C0D85A7
+
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CopperSkin.Core.Theming;
 
 /// <summary>
-/// Adds deterministic hash signatures to CopperSkin theme packs.
+/// Adds no-dependency binary-field ECC signatures to CopperSkin theme packs.
 /// </summary>
 public static class ThemePackSigner
 {
     /// <summary>
-    /// Metadata key that stores the SHA-256 signature.
+    /// Metadata key that stores the B-233 ECDSA signature.
     /// </summary>
-    public const string SignatureKey = "signature.sha256";
+    public const string SignatureKey = "signature.eccgf2.signature";
 
     /// <summary>
-    /// Signs a pack in-place and returns the generated SHA-256 hash.
+    /// Metadata key that stores the uncompressed B-233 public key.
     /// </summary>
-    public static string Sign(ThemePack pack, string signer = "CopperSkin")
+    public const string PublicKeyKey = "signature.eccgf2.publicKey";
+
+    /// <summary>
+    /// Metadata key that stores the active signing algorithm.
+    /// </summary>
+    public const string AlgorithmKey = "signature.algorithm";
+
+    /// <summary>
+    /// Metadata key that stores the active binary curve name.
+    /// </summary>
+    public const string CurveKey = "signature.curve";
+
+    private const string AlgorithmValue = "ECDSA-GF2M-B233-SHA256";
+    private const string CurveValue = "NIST-B-233";
+
+    /// <summary>
+    /// Creates a new B-233 private/public key pair encoded as hexadecimal strings.
+    /// </summary>
+    public static ThemePackSigningKeyPair CreateKeyPair() => BinaryFieldEcdsa.CreateKeyPair();
+
+    /// <summary>
+    /// Derives an uncompressed B-233 public key from a private key.
+    /// </summary>
+    public static string GetPublicKey(string privateKeyHex) => BinaryFieldEcdsa.GetPublicKey(privateKeyHex);
+
+    /// <summary>
+    /// Signs a pack in-place and returns the generated B-233 ECDSA signature.
+    /// </summary>
+    public static string Sign(ThemePack pack, string signer = "CopperSkin", string? privateKeyHex = null)
     {
-        pack.Metadata["signature.algorithm"] = "SHA-256";
+        RemoveSignatureMetadata(pack);
+        string? privateKey = privateKeyHex;
+        if (string.IsNullOrWhiteSpace(privateKey))
+        {
+            ThemePackSigningKeyPair keyPair = CreateKeyPair();
+            privateKey = keyPair.PrivateKeyHex;
+            pack.Metadata[PublicKeyKey] = keyPair.PublicKeyHex;
+        }
+        else
+        {
+            pack.Metadata[PublicKeyKey] = GetPublicKey(privateKey!);
+        }
+
+        pack.Metadata[AlgorithmKey] = AlgorithmValue;
+        pack.Metadata[CurveKey] = CurveValue;
         pack.Metadata["signature.signer"] = signer;
         pack.Metadata["signature.createdUtc"] = DateTime.UtcNow.ToString("O");
-        string hash = ComputeHash(pack);
-        pack.Metadata[SignatureKey] = hash;
-        return hash;
+        string signature = BinaryFieldEcdsa.Sign(ComputeHashBytes(pack), privateKey);
+        pack.Metadata[SignatureKey] = signature;
+        return signature;
     }
 
     /// <summary>
-    /// Verifies a pack against the SHA-256 signature stored in metadata.
+    /// Verifies a pack against the B-233 ECDSA signature stored in metadata.
     /// </summary>
-    public static bool Verify(ThemePack pack)
+    public static bool Verify(ThemePack pack, string? trustedPublicKeyHex = null)
     {
-        return pack.Metadata.TryGetValue(SignatureKey, out string? signature) &&
-            string.Equals(signature, ComputeHash(pack), StringComparison.OrdinalIgnoreCase);
+        if (!pack.Metadata.TryGetValue(SignatureKey, out string? signature) ||
+            !pack.Metadata.TryGetValue(PublicKeyKey, out string? embeddedPublicKey) ||
+            !string.Equals(pack.Metadata.TryGetValue(AlgorithmKey, out string? algorithm) ? algorithm : string.Empty, AlgorithmValue, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string publicKey = string.IsNullOrWhiteSpace(trustedPublicKeyHex) ? embeddedPublicKey : trustedPublicKeyHex!;
+        return BinaryFieldEcdsa.Verify(ComputeHashBytes(pack), signature, publicKey);
     }
 
     /// <summary>
-    /// Computes the deterministic SHA-256 hash used by CopperSkin signatures.
+    /// Computes a deterministic SHA-256 payload hash for baselines, diffs, and signature input.
     /// </summary>
     public static string ComputeHash(ThemePack pack)
     {
+        return ToHex(ComputeHashBytes(pack));
+    }
+
+    private static byte[] ComputeHashBytes(ThemePack pack)
+    {
         using SHA256 sha = SHA256.Create();
-        byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(Normalize(pack)));
-        return ToHex(hash);
+        return sha.ComputeHash(Encoding.UTF8.GetBytes(Normalize(pack)));
     }
 
     private static string Normalize(ThemePack pack)
@@ -87,6 +141,16 @@ public static class ThemePackSigner
         }
 
         return builder.ToString();
+    }
+
+    private static void RemoveSignatureMetadata(ThemePack pack)
+    {
+        pack.Metadata.Remove(SignatureKey);
+        pack.Metadata.Remove(PublicKeyKey);
+        pack.Metadata.Remove(AlgorithmKey);
+        pack.Metadata.Remove(CurveKey);
+        pack.Metadata.Remove("signature.sha256");
+        pack.Metadata.Remove("signature.publicKey");
     }
 
     private static string ToHex(byte[] bytes)

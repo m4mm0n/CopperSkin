@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Designer\MainWindow.xaml.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:39:02 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 6A686334
+ *  Last Modified  : 2026-07-03 09:57:50 +02:00
+ *  CRC32          : 51DF4D52
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,8 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 6A686334
+// CRC32-BODY: 51DF4D52
+
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -41,6 +42,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     private readonly ThemePack _runtimePack = BuiltInThemeCatalog.Create();
     private ThemeDefinition? _selectedTheme;
     private TokenRow? _selectedToken;
+    private string? _lastLoggedThemeId;
 
     /// <summary>
     /// Initializes the designer window, loads editable themes, and selects the first preview theme.
@@ -50,6 +52,16 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         InitializeComponent();
         Themes = new ObservableCollection<ThemeDefinition>(_runtimePack.Themes.Select(static t => t.Clone()));
         Diagnostics = [];
+        EventLog = [];
+        PreviewRows =
+        [
+            new("ButtonBase", "Normal/Hover/Pressed", "Button, RepeatButton, ToggleButton"),
+            new("TextBoxBase", "Caret/Selection", "TextBox and RichTextBox"),
+            new("ItemsControl", "Selected/Hover", "ListBox, ListView, TreeView"),
+            new("DataGrid", "Rows/Cells/Headers", "Data grid rows, cells, headers, details"),
+            new("Documents", "Readable", "FlowDocument, Paragraph, List, Hyperlink"),
+            new("Chrome", "Native/Themed", "Menu, ContextMenu, ToolBar, StatusBar")
+        ];
         Tokens = [];
         TokenCatalog = new ObservableCollection<TokenCatalogRow>(
             ThemeTokenCatalog.All
@@ -58,6 +70,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
                 .Select(static t => new TokenCatalogRow(t)));
         DataContext = this;
         ThemeList.SelectedIndex = 0;
+        Log(LogType.Info, "Designer window initialized");
     }
 
     /// <summary>
@@ -76,6 +89,11 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     public ObservableCollection<TokenRow> Tokens { get; }
 
     /// <summary>
+    /// Gets representative standard WPF rows shown by the preview tab.
+    /// </summary>
+    public ObservableCollection<PreviewRow> PreviewRows { get; }
+
+    /// <summary>
     /// Gets the canonical token catalog shown inside the designer.
     /// </summary>
     public ObservableCollection<TokenCatalogRow> TokenCatalog { get; }
@@ -84,6 +102,11 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// Gets the validation diagnostics shown in the designer.
     /// </summary>
     public ObservableCollection<string> Diagnostics { get; }
+
+    /// <summary>
+    /// Gets the recent Designer event log shown in the shell.
+    /// </summary>
+    public ObservableCollection<string> EventLog { get; }
 
     /// <summary>
     /// Gets or sets the token row currently selected in the live token grid.
@@ -120,28 +143,36 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         foreach (var pair in _selectedTheme.Tokens.OrderBy(static t => t.Key, StringComparer.OrdinalIgnoreCase))
             Tokens.Add(new TokenRow(pair.Key, pair.Value));
 
+        if (!string.Equals(_lastLoggedThemeId, _selectedTheme.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            Log(LogType.Info, $"Selected theme {_selectedTheme.Name}");
+            _lastLoggedThemeId = _selectedTheme.Id;
+        }
+
         ApplyCurrentTheme();
     }
 
     /// <summary>
     /// Applies the currently edited token value when the user clicks the apply button.
     /// </summary>
-    private void ApplyToken_Click(object sender, RoutedEventArgs e) => ApplyTokenEdit();
+    private void ApplyToken_Click(object sender, RoutedEventArgs e) => ApplyTokenEdit(logEdit: true);
 
     /// <summary>
     /// Live-applies token edits as the value text box changes.
     /// </summary>
-    private void TokenValueBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyTokenEdit();
+    private void TokenValueBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyTokenEdit(logEdit: false);
 
     /// <summary>
     /// Writes the selected token value into the editable theme and refreshes the preview.
     /// </summary>
-    private void ApplyTokenEdit()
+    private void ApplyTokenEdit(bool logEdit)
     {
         if (_selectedTheme is null || SelectedToken is null)
             return;
 
         _selectedTheme.Tokens[SelectedToken.Key] = SelectedToken.Value;
+        if (logEdit)
+            Log(LogType.Info, $"Applied token {SelectedToken.Key}");
         ApplyCurrentTheme();
     }
 
@@ -179,7 +210,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         copy.Id = ThemeNames.Slug(copy.Name);
         Themes.Add(copy);
         ThemeList.SelectedItem = copy;
-        LogManager.GetDefaultLogger().Log(LogType.Info, $"Duplicated theme {copy.Name}");
+        Log(LogType.Info, $"Duplicated theme {copy.Name}");
     }
 
     /// <summary>
@@ -194,6 +225,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
             Diagnostics.Add(diagnostic.ToString());
         StatusText = $"Validated {pack.Themes.Count} themes";
         OnPropertyChanged(nameof(StatusText));
+        Log(LogType.Info, $"Validated {pack.Themes.Count} themes with {Diagnostics.Count} diagnostics");
     }
 
     /// <summary>
@@ -214,6 +246,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
         ThemeJsonSerializer.WritePack(dialog.FileName, pack);
         StatusText = $"Exported {dialog.FileName}";
         OnPropertyChanged(nameof(StatusText));
+        Log(LogType.Info, $"Exported theme pack to {dialog.FileName}");
     }
 
     /// <summary>
@@ -221,6 +254,7 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// </summary>
     private void TaskDialog_Click(object sender, RoutedEventArgs e)
     {
+        Log(LogType.Info, "Opened TaskDialog preview");
         new CopperTaskDialog
         {
             Title = "CopperSkin TaskDialog",
@@ -234,7 +268,25 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// Raises a property-change notification for WPF binding refresh.
     /// </summary>
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private void Log(LogType type, string message, Exception? exception = null)
+    {
+        var logger = LogManager.GetDefaultLogger();
+        if (exception is null)
+            logger?.Log(type, message);
+        else
+            logger?.Log(type, message, exception);
+
+        EventLog.Insert(0, $"{DateTimeOffset.Now:HH:mm:ss} [{type}] {message}");
+        while (EventLog.Count > 200)
+            EventLog.RemoveAt(EventLog.Count - 1);
+    }
 }
+
+/// <summary>
+/// Represents one standard WPF preview row in the Designer preview tab.
+/// </summary>
+public sealed record PreviewRow(string Component, string State, string Notes);
 
 /// <summary>
 /// Represents one editable token row in the designer token grid.

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added no-dependency B-233 binary-field ECDSA theme-pack signing, key generation, and trusted-public-key verification.
+- Added broader implicit WPF standard-control coverage for shell, item, text/document, popup, data-grid, toolbar, resize, and document primitives.
+- Added a richer Designer preview tab that exercises forms, collections, data grids, menus, toolbars, document content, calendar, and ink surfaces.
+- Added a Designer event log pane backed by QuickLog for theme selection, token apply, validation, export, duplicate, and dialog preview actions.
+
+### Changed
+
+- Changed theme-pack signing metadata from hash-only `signature.sha256` to `signature.eccgf2.*` B-233 ECDSA metadata.
+- Updated CLI signing commands to support `keygen`, private-key-backed signing, and optional trusted public-key verification.
+
 ## v0.2.0.0 - 2026-06-04
 
 ### Added
