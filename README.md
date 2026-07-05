@@ -31,6 +31,20 @@ CopperSkinApp.Use(Application.Current)
     .Install();
 ```
 
+For instant Visual Studio designer support, merge the XAML-loadable resources in `App.xaml` too:
+
+```xml
+<Application.Resources>
+  <ResourceDictionary>
+    <ResourceDictionary.MergedDictionaries>
+      <copper:CopperSkinThemeResources Theme="FL Grape"/>
+    </ResourceDictionary.MergedDictionaries>
+  </ResourceDictionary>
+</Application.Resources>
+```
+
+Use `xmlns:copper="clr-namespace:CopperSkin.Wpf;assembly=CopperSkin.Wpf"`. The startup install call can still switch or replace the active runtime theme.
+
 Use the custom shell controls where you want full window/dialog ownership:
 
 ```xml

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added `CopperSkinThemeResources`, a XAML-loadable resource dictionary that lets host apps and Visual Studio designer surfaces render CopperSkin styling before runtime startup executes.
 - Added no-dependency B-233 binary-field ECDSA theme-pack signing, key generation, and trusted-public-key verification.
 - Added broader implicit WPF standard-control coverage for shell, item, text/document, popup, data-grid, toolbar, resize, and document primitives.
 - Added a richer Designer preview tab that exercises forms, collections, data grids, menus, toolbars, document content, calendar, and ink surfaces.
