@@ -4,8 +4,8 @@
  *  File           : tests\CopperSkin.Wpf.Tests\WpfThemeTests.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:40:59 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 7533BD52
+ *  Last Modified  : 2026-07-05 10:39:50 +02:00
+ *  CRC32          : 7C388A03
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,8 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 7533BD52
+// CRC32-BODY: 7C388A03
+
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -54,6 +55,39 @@ public sealed class WpfThemeTests
         Assert.IsType<Thickness>(dictionary["CopperSkin.Spacing.Md"]);
         Assert.IsType<CornerRadius>(dictionary["CopperSkin.Radius.Md"]);
         Assert.IsType<Duration>(dictionary["CopperSkin.Motion.Transition"]);
+    }
+
+    /// <summary>
+    /// Verifies XAML-loadable CopperSkin resources theme standard controls before app startup runs.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesLoadForDesignerSurfaces()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            Assert.IsType<SolidColorBrush>(resources["color.accent.primary"]);
+            Assert.True(CountDefaultStyleDictionaries(resources) > 0);
+        });
+    }
+
+    /// <summary>
+    /// Verifies runtime install reuses design-time dictionaries instead of merging duplicate bundled styles.
+    /// </summary>
+    [WpfFact]
+    public void ResourceEmitterDoesNotDuplicateDesignerStyles()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new ResourceDictionary();
+            resources.MergedDictionaries.Add(new CopperSkinThemeResources { Theme = "FL Grape" });
+            var before = CountDefaultStyleDictionaries(resources);
+
+            CopperSkinResourceEmitter.MergeDefaultDictionaries(resources);
+
+            Assert.Equal(before, CountDefaultStyleDictionaries(resources));
+        });
     }
 
     /// <summary>
@@ -120,7 +154,9 @@ public sealed class WpfThemeTests
             }
             finally
             {
-                Application.Current?.Shutdown();
+                var application = Application.Current;
+                if (application is not null && application.Dispatcher.CheckAccess())
+                    application.Shutdown();
             }
         });
         thread.SetApartmentState(ApartmentState.STA);
@@ -128,6 +164,17 @@ public sealed class WpfThemeTests
         thread.Join();
         if (exception is not null)
             ExceptionDispatchInfo.Capture(exception).Throw();
+    }
+
+    private static int CountDefaultStyleDictionaries(ResourceDictionary resources)
+    {
+        var count = resources.Contains("CopperSkin.Internal.DefaultControlStyles")
+            || resources.Source?.OriginalString.Contains("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", StringComparison.OrdinalIgnoreCase) == true
+            ? 1
+            : 0;
+        foreach (var dictionary in resources.MergedDictionaries)
+            count += CountDefaultStyleDictionaries(dictionary);
+        return count;
     }
 }
 

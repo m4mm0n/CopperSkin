@@ -4,8 +4,8 @@
  *  File           : src\CopperSkin.Wpf\Resources\CopperSkinResourceEmitter.cs
  *  Author         : Geir Gustavsen, ZeroLinez Softworx 2024 - 2026
  *  Created        : 2026-05-25 09:34:20 +02:00
- *  Last Modified  : 2026-06-08 19:36:14 +02:00
- *  CRC32          : 0F827D68
+ *  Last Modified  : 2026-07-05 10:39:13 +02:00
+ *  CRC32          : 1E97CCE7
  *
  *  Description    :
  *                   CopperSkin WPF theme engine source file with live theming, custom controls, and designer support.
@@ -18,7 +18,8 @@
  *                   WPF theme engine extracted from the amChipper custom skin.
  * ====================================================================================================
  */
-// CRC32-BODY: 0F827D68
+// CRC32-BODY: 1E97CCE7
+
 // copperskin:allow-hardcoded-color-file
 using System.Windows;
 using System.Windows.Media;
@@ -32,9 +33,10 @@ namespace CopperSkin.Wpf.Resources;
 /// </summary>
 public static class CopperSkinResourceEmitter
 {
-    private static readonly string[] DictionarySources =
+    private const string DefaultStylesMarkerKey = "CopperSkin.Internal.DefaultControlStyles";
+    private static readonly Uri[] DictionarySources =
     [
-        "/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml"
+        new("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", UriKind.Relative)
     ];
 
     /// <summary>
@@ -44,12 +46,36 @@ public static class CopperSkinResourceEmitter
     {
         foreach (var source in DictionarySources)
         {
-            var uri = new Uri(source, UriKind.Relative);
-            if (target.MergedDictionaries.Any(d => d.Source == uri))
+            if (ContainsMergedDictionary(target, source))
                 continue;
 
-            target.MergedDictionaries.Add(new ResourceDictionary { Source = uri });
+            target.MergedDictionaries.Add(LoadDictionary(source));
         }
+    }
+
+    private static ResourceDictionary LoadDictionary(Uri source)
+    {
+        var dictionary = (ResourceDictionary)Application.LoadComponent(source);
+        dictionary[DefaultStylesMarkerKey] = true;
+        return dictionary;
+    }
+
+    private static bool ContainsMergedDictionary(ResourceDictionary dictionary, Uri source)
+    {
+        foreach (var merged in dictionary.MergedDictionaries)
+        {
+            if (IsDefaultStylesDictionary(merged, source) || ContainsMergedDictionary(merged, source))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsDefaultStylesDictionary(ResourceDictionary dictionary, Uri source)
+    {
+        return dictionary.Contains(DefaultStylesMarkerKey)
+            || dictionary.Source == source
+            || dictionary.Source?.OriginalString.Contains(source.OriginalString, StringComparison.OrdinalIgnoreCase) == true;
     }
 
     /// <summary>
