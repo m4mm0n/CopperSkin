@@ -32,11 +32,6 @@ namespace CopperSkin.Wpf.Chrome;
 /// </summary>
 public sealed class WpfWindowChromeService
 {
-    private const int DwmwaUseImmersiveDarkMode = 20;
-    private const int DwmwaBorderColor = 34;
-    private const int DwmwaCaptionColor = 35;
-    private const int DwmwaTextColor = 36;
-    private const int DwmwaSystemBackdropType = 38;
 
     /// <summary>
     /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
@@ -68,9 +63,15 @@ public sealed class WpfWindowChromeService
     }
 
     /// <summary>
-    /// Converts a WPF color into the COLORREF integer layout required by DWM.
+    /// Calls the Windows DWM API used to color title bars, borders, and caption text.
     /// </summary>
-    private static int ToColorRef(System.Windows.Media.Color color) => color.R | (color.G << 8) | (color.B << 16);
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(nint hwnd, int attribute, ref int attributeValue, int attributeSize);
+    private const int DwmwaBorderColor = 34;
+    private const int DwmwaCaptionColor = 35;
+    private const int DwmwaSystemBackdropType = 38;
+    private const int DwmwaTextColor = 36;
+    private const int DwmwaUseImmersiveDarkMode = 20;
 
     private static int ToBackdropValue(CopperSkinBackdropKind backdropKind) => backdropKind switch
     {
@@ -83,8 +84,7 @@ public sealed class WpfWindowChromeService
     };
 
     /// <summary>
-    /// Calls the Windows DWM API used to color title bars, borders, and caption text.
+    /// Converts a WPF color into the COLORREF integer layout required by DWM.
     /// </summary>
-    [DllImport("dwmapi.dll", PreserveSig = true)]
-    private static extern int DwmSetWindowAttribute(nint hwnd, int attribute, ref int attributeValue, int attributeSize);
+    private static int ToColorRef(System.Windows.Media.Color color) => color.R | (color.G << 8) | (color.B << 16);
 }

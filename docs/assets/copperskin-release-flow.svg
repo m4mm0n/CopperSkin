@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">CopperSkin release flow</title>
+  <desc id="desc">A release flow from source validation through tests, package creation, signing, and publishing.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#101014"/><stop offset="1" stop-color="#211a2d"/></linearGradient>
+    <linearGradient id="accent" x1="0" x2="1"><stop offset="0" stop-color="#7447c7"/><stop offset="1" stop-color="#ffa1f7"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ffa1f7"/></marker>
+    <style>
+      .label { font: 600 19px 'Segoe UI', sans-serif; fill: #f8f8ff; }
+      .small { font: 400 14px 'Segoe UI', sans-serif; fill: #c9c9d8; }
+      .box { fill: #1d1d24; stroke: #666675; stroke-width: 2; }
+      .arrow { stroke: #ffa1f7; stroke-width: 3; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1200" height="300" rx="24" fill="url(#bg)"/>
+  <text x="50" y="54" class="label" font-size="28">Release path</text>
+  <text x="50" y="80" class="small">Every stage produces an inspectable artifact or verification signal.</text>
+  <line x1="225" y1="170" x2="270" y2="170" class="arrow"/><line x1="445" y1="170" x2="490" y2="170" class="arrow"/><line x1="665" y1="170" x2="710" y2="170" class="arrow"/><line x1="885" y1="170" x2="930" y2="170" class="arrow"/>
+  <rect x="50" y="120" width="175" height="100" rx="14" class="box"/><text x="137" y="158" text-anchor="middle" class="label">Build</text><text x="137" y="184" text-anchor="middle" class="small">all target frameworks</text>
+  <rect x="270" y="120" width="175" height="100" rx="14" class="box"/><text x="357" y="158" text-anchor="middle" class="label">Test</text><text x="357" y="184" text-anchor="middle" class="small">unit · WPF · visual</text>
+  <rect x="490" y="120" width="175" height="100" rx="14" class="box"/><text x="577" y="158" text-anchor="middle" class="label">Package</text><text x="577" y="184" text-anchor="middle" class="small">NuGet · archives</text>
+  <rect x="710" y="120" width="175" height="100" rx="14" fill="url(#accent)"/><text x="797" y="158" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="19" font-weight="700" fill="#15111c">Sign</text><text x="797" y="184" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" fill="#211a2d">theme metadata</text>
+  <rect x="930" y="120" width="220" height="100" rx="14" class="box"/><text x="1040" y="158" text-anchor="middle" class="label">Publish</text><text x="1040" y="184" text-anchor="middle" class="small">release + docs + symbols</text>
+</svg>

@@ -40,32 +40,6 @@ public static class CopperSkinApp
 /// </summary>
 public sealed class CopperSkinAppBuilder
 {
-    private readonly Application _application;
-    private ThemePack? _pack;
-    private readonly CopperSkinThemeOptions _options = new();
-
-    internal CopperSkinAppBuilder(Application application)
-    {
-        _application = application ?? throw new ArgumentNullException(nameof(application));
-    }
-
-    /// <summary>
-    /// Selects the theme pack used by the runtime.
-    /// </summary>
-    public CopperSkinAppBuilder Pack(ThemePack pack)
-    {
-        _pack = pack;
-        return this;
-    }
-
-    /// <summary>
-    /// Selects the initial theme name or id.
-    /// </summary>
-    public CopperSkinAppBuilder Theme(string themeNameOrId)
-    {
-        _options.DefaultThemeName = themeNameOrId;
-        return this;
-    }
 
     /// <summary>
     /// Selects the preferred Windows 11 backdrop.
@@ -85,8 +59,34 @@ public sealed class CopperSkinAppBuilder
         return this;
     }
 
+    internal CopperSkinAppBuilder(Application application)
+    {
+        _application = application ?? throw new ArgumentNullException(nameof(application));
+    }
+
     /// <summary>
     /// Installs CopperSkin and applies the selected initial theme.
     /// </summary>
     public CopperSkinThemeManager Install() => CopperSkinThemeManager.Install(_application, _pack, _options);
+
+    /// <summary>
+    /// Selects the theme pack used by the runtime.
+    /// </summary>
+    public CopperSkinAppBuilder Pack(ThemePack pack)
+    {
+        _pack = pack;
+        return this;
+    }
+
+    /// <summary>
+    /// Selects the initial theme name or id.
+    /// </summary>
+    public CopperSkinAppBuilder Theme(string themeNameOrId)
+    {
+        _options.DefaultThemeName = themeNameOrId;
+        return this;
+    }
+    private readonly Application _application;
+    private readonly CopperSkinThemeOptions _options = new();
+    private ThemePack? _pack;
 }

@@ -50,17 +50,13 @@ public enum CopperTaskDialogIcon
 public sealed class CopperTaskDialog
 {
     /// <summary>
-    /// Gets or sets the dialog window title.
-    /// </summary>
-    public string Title { get; set; } = "CopperSkin Task";
-    /// <summary>
     /// Gets or sets the prominent heading shown above the task dialog body.
     /// </summary>
     public string Heading { get; set; } = string.Empty;
     /// <summary>
-    /// Gets or sets the main explanatory task dialog text.
+    /// Gets or sets the stock Win32 icon shown in the dialog.
     /// </summary>
-    public string Text { get; set; } = string.Empty;
+    public CopperTaskDialogIcon Icon { get; set; }
     /// <summary>
     /// Gets or sets the primary action button caption.
     /// </summary>
@@ -69,14 +65,6 @@ public sealed class CopperTaskDialog
     /// Gets or sets the secondary action button caption.
     /// </summary>
     public string SecondaryButtonText { get; set; } = "Cancel";
-    /// <summary>
-    /// Gets or sets whether the dialog includes a secondary cancel-style action.
-    /// </summary>
-    public bool ShowSecondaryButton { get; set; }
-    /// <summary>
-    /// Gets or sets the stock Win32 icon shown in the dialog.
-    /// </summary>
-    public CopperTaskDialogIcon Icon { get; set; }
 
     /// <summary>
     /// Shows the themed dialog or window interaction and returns the selected result.
@@ -94,4 +82,16 @@ public sealed class CopperTaskDialog
             dialog.Owner = owner;
         return dialog.ShowDialog() == true && dialog.Result == MessageBoxResult.OK;
     }
+    /// <summary>
+    /// Gets or sets whether the dialog includes a secondary cancel-style action.
+    /// </summary>
+    public bool ShowSecondaryButton { get; set; }
+    /// <summary>
+    /// Gets or sets the main explanatory task dialog text.
+    /// </summary>
+    public string Text { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the dialog window title.
+    /// </summary>
+    public string Title { get; set; } = "CopperSkin Task";
 }

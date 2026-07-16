@@ -36,7 +36,7 @@ public static class ThemePackArchive
         if (!Directory.Exists(sourceDirectory))
             throw new DirectoryNotFoundException(sourceDirectory);
 
-        string? outputDirectory = Path.GetDirectoryName(outputPath);
+        var outputDirectory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrWhiteSpace(outputDirectory))
             Directory.CreateDirectory(outputDirectory);
 

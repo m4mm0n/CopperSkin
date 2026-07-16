@@ -28,25 +28,29 @@ namespace CopperSkin.Wpf;
 /// </summary>
 public static class CopperSkinThemeScope
 {
-    /// <summary>
-    /// Identifies the attached theme name/id property.
-    /// </summary>
-    public static readonly DependencyProperty ThemeProperty = DependencyProperty.RegisterAttached(
-        "Theme",
-        typeof(string),
-        typeof(CopperSkinThemeScope),
-        new PropertyMetadata(null, OnThemeChanged));
 
-    private static readonly DependencyProperty PreviousResourcesProperty = DependencyProperty.RegisterAttached(
-        "PreviousResources",
-        typeof(CopperSkinThemeManager.ResourceSnapshot),
-        typeof(CopperSkinThemeScope),
-        new PropertyMetadata(null));
+    private static void Apply(FrameworkElement element, string? theme)
+    {
+        if (string.IsNullOrWhiteSpace(theme))
+        {
+            Restore(element);
+            return;
+        }
 
-    /// <summary>
-    /// Sets the scoped CopperSkin theme name or id on a WPF element.
-    /// </summary>
-    public static void SetTheme(DependencyObject element, string? value) => element.SetValue(ThemeProperty, value);
+        if (element.GetValue(PreviousResourcesProperty) is not CopperSkinThemeManager.ResourceSnapshot)
+            element.SetValue(PreviousResourcesProperty, CopperSkinThemeManager.ResourceSnapshot.Capture(element.Resources));
+
+        CopperSkinThemeManager.Current?.ApplyTo(element, theme);
+    }
+
+    private static void ElementLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            element.Loaded -= ElementLoaded;
+            Apply(element, GetTheme(element));
+        }
+    }
 
     /// <summary>
     /// Gets the scoped CopperSkin theme name or id from a WPF element.
@@ -67,28 +71,11 @@ public static class CopperSkinThemeScope
             element.Loaded += ElementLoaded;
     }
 
-    private static void ElementLoaded(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement element)
-        {
-            element.Loaded -= ElementLoaded;
-            Apply(element, GetTheme(element));
-        }
-    }
-
-    private static void Apply(FrameworkElement element, string? theme)
-    {
-        if (string.IsNullOrWhiteSpace(theme))
-        {
-            Restore(element);
-            return;
-        }
-
-        if (element.GetValue(PreviousResourcesProperty) is not CopperSkinThemeManager.ResourceSnapshot)
-            element.SetValue(PreviousResourcesProperty, CopperSkinThemeManager.ResourceSnapshot.Capture(element.Resources));
-
-        CopperSkinThemeManager.Current?.ApplyTo(element, theme);
-    }
+    private static readonly DependencyProperty PreviousResourcesProperty = DependencyProperty.RegisterAttached(
+        "PreviousResources",
+        typeof(CopperSkinThemeManager.ResourceSnapshot),
+        typeof(CopperSkinThemeScope),
+        new PropertyMetadata(null));
 
     private static void Restore(FrameworkElement element)
     {
@@ -98,4 +85,17 @@ public static class CopperSkinThemeScope
         snapshot.Restore(element.Resources);
         element.ClearValue(PreviousResourcesProperty);
     }
+
+    /// <summary>
+    /// Sets the scoped CopperSkin theme name or id on a WPF element.
+    /// </summary>
+    public static void SetTheme(DependencyObject element, string? value) => element.SetValue(ThemeProperty, value);
+    /// <summary>
+    /// Identifies the attached theme name/id property.
+    /// </summary>
+    public static readonly DependencyProperty ThemeProperty = DependencyProperty.RegisterAttached(
+        "Theme",
+        typeof(string),
+        typeof(CopperSkinThemeScope),
+        new PropertyMetadata(null, OnThemeChanged));
 }

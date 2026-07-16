@@ -27,14 +27,13 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ResolvedTheme
 {
+
     /// <summary>
-    /// Creates an immutable resolved theme from a final token dictionary.
+    /// Returns a token value by key, or a visible fallback when the token is missing.
     /// </summary>
-    public ResolvedTheme(string id, string name, IReadOnlyDictionary<string, string> tokens)
+    public string Get(string key, string fallback = "#FFFF00FF")
     {
-        Id = id;
-        Name = name;
-        Tokens = tokens;
+        return Tokens.TryGetValue(key, out var value) ? value : fallback;
     }
 
     /// <summary>
@@ -46,17 +45,18 @@ public sealed class ResolvedTheme
     /// Gets the display name of the resolved theme.
     /// </summary>
     public string Name { get; }
+    /// <summary>
+    /// Creates an immutable resolved theme from a final token dictionary.
+    /// </summary>
+    public ResolvedTheme(string id, string name, IReadOnlyDictionary<string, string> tokens)
+    {
+        Id = id;
+        Name = name;
+        Tokens = tokens;
+    }
 
     /// <summary>
     /// Gets the final token dictionary after inheritance, aliases, and derived tokens are applied.
     /// </summary>
     public IReadOnlyDictionary<string, string> Tokens { get; }
-
-    /// <summary>
-    /// Returns a token value by key, or a visible fallback when the token is missing.
-    /// </summary>
-    public string Get(string key, string fallback = "#FFFF00FF")
-    {
-        return Tokens.TryGetValue(key, out string? value) ? value : fallback;
-    }
 }

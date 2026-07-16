@@ -27,30 +27,6 @@ namespace CopperSkin.Cli.Tests;
 /// </summary>
 public sealed class CliTests
 {
-    /// <summary>
-    /// Verifies the List Command Succeeds behavior.
-    /// </summary>
-    [Fact]
-    public void ListCommandSucceeds()
-    {
-        var exitCode = Program.Main(["list"]);
-
-        Assert.Equal(0, exitCode);
-    }
-
-    /// <summary>
-    /// Verifies the Export And Validate Built Ins Succeeds behavior.
-    /// </summary>
-    [Fact]
-    public void ExportAndValidateBuiltInsSucceeds()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "copperskin-cli-" + Guid.NewGuid().ToString("N"));
-        var pack = Path.Combine(root, "theme-pack.json");
-
-        Assert.Equal(0, Program.Main(["export-builtins", pack]));
-        Assert.True(File.Exists(pack));
-        Assert.Equal(0, Program.Main(["validate", pack]));
-    }
 
     /// <summary>
     /// Verifies the Authoring Commands Create Assets behavior.
@@ -83,19 +59,27 @@ public sealed class CliTests
     }
 
     /// <summary>
-    /// Verifies the Migration Command Creates Report behavior.
+    /// Verifies the Export And Validate Built Ins Succeeds behavior.
     /// </summary>
     [Fact]
-    public void MigrationCommandCreatesReport()
+    public void ExportAndValidateBuiltInsSucceeds()
     {
-        var root = Path.Combine(Path.GetTempPath(), "copperskin-migrate-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "View.xaml"), "<Grid Background=\"#FF000000\"/>");
-        var report = Path.Combine(root, "report.md");
+        var root = Path.Combine(Path.GetTempPath(), "copperskin-cli-" + Guid.NewGuid().ToString("N"));
+        var pack = Path.Combine(root, "theme-pack.json");
 
-        Assert.Equal(0, Program.Main(["migrate", root, report]));
+        Assert.Equal(0, Program.Main(["export-builtins", pack]));
+        Assert.True(File.Exists(pack));
+        Assert.Equal(0, Program.Main(["validate", pack]));
+    }
+    /// <summary>
+    /// Verifies the List Command Succeeds behavior.
+    /// </summary>
+    [Fact]
+    public void ListCommandSucceeds()
+    {
+        var exitCode = Program.Main(["list"]);
 
-        Assert.Contains("CopperSkin Migration Report", File.ReadAllText(report));
+        Assert.Equal(0, exitCode);
     }
 
     /// <summary>
@@ -114,5 +98,21 @@ public sealed class CliTests
         Assert.True(File.Exists(output));
         var magic = File.ReadAllBytes(output).Take(7).ToArray();
         Assert.Equal("CSLZHC1", System.Text.Encoding.ASCII.GetString(magic));
+    }
+
+    /// <summary>
+    /// Verifies the Migration Command Creates Report behavior.
+    /// </summary>
+    [Fact]
+    public void MigrationCommandCreatesReport()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperskin-migrate-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "View.xaml"), "<Grid Background=\"#FF000000\"/>");
+        var report = Path.Combine(root, "report.md");
+
+        Assert.Equal(0, Program.Main(["migrate", root, report]));
+
+        Assert.Contains("CopperSkin Migration Report", File.ReadAllText(report));
     }
 }

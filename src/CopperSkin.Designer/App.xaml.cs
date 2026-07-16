@@ -35,57 +35,9 @@ namespace CopperSkin.Designer;
 /// </summary>
 public partial class App : Application
 {
-    private CopperSkinExceptionPopup? _exceptionPopup;
-
-    /// <summary>
-    /// Configures logging, installs CopperSkin, and shows the main application window.
-    /// </summary>
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e);
-        var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CopperSkin", "DesignerLogs");
-        LogManager.ConfigureDefault(LoggerOptions.ForEngine(logDir).WithMinimumLevel(LogType.Info));
-        LogManager.GetDefaultLogger().Log(LogType.Info, "CopperSkin Designer starting");
-        CopperSkinThemeManager.Install(this, BuiltInThemeCatalog.Create());
-        _exceptionPopup = new CopperSkinExceptionPopup(() => MainWindow);
-        LogManager.AttachExceptionHooks(new ExceptionHookOptions
-        {
-            CustomPopup = _exceptionPopup,
-            MarkTaskExceptionsObserved = true,
-            PopupTitle = "CopperSkin Designer Error",
-            ShowStackTraceInPopup = false
-        });
-        DispatcherUnhandledException += OnDispatcherUnhandledException;
-        var window = new MainWindow();
-        MainWindow = window;
-        window.Show();
-    }
-
-    /// <summary>
-    /// Writes the shutdown log entry and flushes QuickLog before application exit.
-    /// </summary>
-    protected override void OnExit(ExitEventArgs e)
-    {
-        DispatcherUnhandledException -= OnDispatcherUnhandledException;
-        LogManager.GetDefaultLogger()?.Log(LogType.Info, "CopperSkin Designer shutting down");
-        LogManager.DetachExceptionHooks();
-        LogManager.Shutdown();
-        base.OnExit(e);
-    }
-
-    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-    {
-        LogManager.GetDefaultLogger()?.Log(LogType.Crit, "Unhandled WPF dispatcher exception", e.Exception);
-        _exceptionPopup?.Show("CopperSkin Designer Error", FormatExceptionMessage(e.Exception), e.Exception, ExceptionSource.AppDomain);
-        e.Handled = true;
-    }
-
-    private static string FormatExceptionMessage(Exception exception)
-        => $"The exception was captured and logged with QuickLog.{Environment.NewLine}{Environment.NewLine}Type: {exception.GetType().FullName}{Environment.NewLine}Message: {exception.Message}";
 
     private sealed class CopperSkinExceptionPopup : IExceptionPopup
     {
-        private readonly Func<Window?> _ownerProvider;
 
         public CopperSkinExceptionPopup(Func<Window?> ownerProvider)
             => _ownerProvider = ownerProvider;
@@ -115,5 +67,53 @@ public partial class App : Application
                 Icon = source == ExceptionSource.UnobservedTask ? CopperTaskDialogIcon.Warning : CopperTaskDialogIcon.Error
             }.Show(_ownerProvider());
         }
+        private readonly Func<Window?> _ownerProvider;
     }
+
+    private static string FormatExceptionMessage(Exception exception)
+        => $"The exception was captured and logged with QuickLog.{Environment.NewLine}{Environment.NewLine}Type: {exception.GetType().FullName}{Environment.NewLine}Message: {exception.Message}";
+
+    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        LogManager.GetDefaultLogger()?.Log(LogType.Crit, "Unhandled WPF dispatcher exception", e.Exception);
+        _exceptionPopup?.Show("CopperSkin Designer Error", FormatExceptionMessage(e.Exception), e.Exception, ExceptionSource.AppDomain);
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Writes the shutdown log entry and flushes QuickLog before application exit.
+    /// </summary>
+    protected override void OnExit(ExitEventArgs e)
+    {
+        DispatcherUnhandledException -= OnDispatcherUnhandledException;
+        LogManager.GetDefaultLogger()?.Log(LogType.Info, "CopperSkin Designer shutting down");
+        LogManager.DetachExceptionHooks();
+        LogManager.Shutdown();
+        base.OnExit(e);
+    }
+
+    /// <summary>
+    /// Configures logging, installs CopperSkin, and shows the main application window.
+    /// </summary>
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CopperSkin", "DesignerLogs");
+        LogManager.ConfigureDefault(LoggerOptions.ForEngine(logDir).WithMinimumLevel(LogType.Info));
+        LogManager.GetDefaultLogger().Log(LogType.Info, "CopperSkin Designer starting");
+        CopperSkinThemeManager.Install(this, BuiltInThemeCatalog.Create());
+        _exceptionPopup = new CopperSkinExceptionPopup(() => MainWindow);
+        LogManager.AttachExceptionHooks(new ExceptionHookOptions
+        {
+            CustomPopup = _exceptionPopup,
+            MarkTaskExceptionsObserved = true,
+            PopupTitle = "CopperSkin Designer Error",
+            ShowStackTraceInPopup = false
+        });
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        var window = new MainWindow();
+        MainWindow = window;
+        window.Show();
+    }
+    private CopperSkinExceptionPopup? _exceptionPopup;
 }

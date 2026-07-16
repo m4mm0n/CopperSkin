@@ -26,11 +26,21 @@ namespace CopperSkin.Wpf.Drawing;
 /// </summary>
 public static class DrawingThemeRegistry
 {
+
     /// <summary>
-    /// Tracks registered drawing surfaces without keeping them alive after their WPF owners are gone.
+    /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
     /// </summary>
-    private static readonly List<WeakReference<IThemeAwareDrawingSurface>> Surfaces = new();
-    private static DrawingThemeSnapshot _current = DrawingThemeSnapshot.Default;
+    public static void Apply(DrawingThemeSnapshot snapshot)
+    {
+        _current = snapshot;
+        lock (Surfaces)
+        {
+            Surfaces.RemoveAll(static reference => !reference.TryGetTarget(out _));
+            foreach (var reference in Surfaces)
+                if (reference.TryGetTarget(out var surface))
+                    surface.ApplyTheme(snapshot);
+        }
+    }
 
     /// <summary>
     /// Gets the most recent drawing-theme snapshot applied to registered surfaces.
@@ -51,21 +61,9 @@ public static class DrawingThemeRegistry
 
         surface.ApplyTheme(_current);
     }
-
     /// <summary>
-    /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
+    /// Tracks registered drawing surfaces without keeping them alive after their WPF owners are gone.
     /// </summary>
-    public static void Apply(DrawingThemeSnapshot snapshot)
-    {
-        _current = snapshot;
-        lock (Surfaces)
-        {
-            Surfaces.RemoveAll(static reference => !reference.TryGetTarget(out _));
-            foreach (var reference in Surfaces)
-            {
-                if (reference.TryGetTarget(out var surface))
-                    surface.ApplyTheme(snapshot);
-            }
-        }
-    }
+    private static readonly List<WeakReference<IThemeAwareDrawingSurface>> Surfaces = new();
+    private static DrawingThemeSnapshot _current = DrawingThemeSnapshot.Default;
 }

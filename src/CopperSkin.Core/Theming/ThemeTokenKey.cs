@@ -26,10 +26,6 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public readonly record struct ThemeTokenKey(string Value)
 {
-    /// <summary>
-    /// Formats the value as a concise human-readable string.
-    /// </summary>
-    public override string ToString() => Value;
 
     /// <summary>
     /// Creates a validated value object from raw text.
@@ -41,4 +37,8 @@ public readonly record struct ThemeTokenKey(string Value)
 
         return new ThemeTokenKey(value.Trim());
     }
+    /// <summary>
+    /// Formats the value as a concise human-readable string.
+    /// </summary>
+    public override string ToString() => Value;
 }

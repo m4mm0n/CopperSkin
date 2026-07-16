@@ -21,6 +21,8 @@
 // CRC32-BODY: 7C388A03
 
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Runtime.ExceptionServices;
@@ -36,7 +38,31 @@ namespace CopperSkin.Wpf.Tests;
 /// </summary>
 public sealed class WpfThemeTests
 {
-    private static readonly object WpfLock = new();
+
+    private static int CountDefaultStyleDictionaries(ResourceDictionary resources)
+    {
+        var count = resources.Contains("CopperSkin.Internal.DefaultControlStyles")
+            || resources.Source?.OriginalString.Contains("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", StringComparison.OrdinalIgnoreCase) == true
+            ? 1
+            : 0;
+        foreach (var dictionary in resources.MergedDictionaries)
+            count += CountDefaultStyleDictionaries(dictionary);
+        return count;
+    }
+
+    /// <summary>
+    /// Verifies the Drawing Snapshot Freezes Brushes behavior.
+    /// </summary>
+    [WpfFact]
+    public void DrawingSnapshotFreezesBrushes()
+    {
+        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "Terminal Green");
+
+        var snapshot = DrawingThemeSnapshot.FromTheme(theme);
+
+        Assert.True(snapshot.Surface.IsFrozen);
+        Assert.True(snapshot.GridLinePen.IsFrozen);
+    }
 
     /// <summary>
     /// Verifies the Resource Emitter Creates Brushes And Gradients behavior.
@@ -58,21 +84,6 @@ public sealed class WpfThemeTests
     }
 
     /// <summary>
-    /// Verifies XAML-loadable CopperSkin resources theme standard controls before app startup runs.
-    /// </summary>
-    [WpfFact]
-    public void ThemeResourcesLoadForDesignerSurfaces()
-    {
-        RunOnSta(() =>
-        {
-            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
-
-            Assert.IsType<SolidColorBrush>(resources["color.accent.primary"]);
-            Assert.True(CountDefaultStyleDictionaries(resources) > 0);
-        });
-    }
-
-    /// <summary>
     /// Verifies runtime install reuses design-time dictionaries instead of merging duplicate bundled styles.
     /// </summary>
     [WpfFact]
@@ -91,17 +102,69 @@ public sealed class WpfThemeTests
     }
 
     /// <summary>
-    /// Verifies the Drawing Snapshot Freezes Brushes behavior.
+    /// Verifies horizontal scrollbars move the thumb in the same direction as the value.
     /// </summary>
     [WpfFact]
-    public void DrawingSnapshotFreezesBrushes()
+    public void HorizontalScrollBarTemplateUsesForwardDirection()
     {
-        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "Terminal Green");
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+            var scrollBar = new ScrollBar
+            {
+                Orientation = Orientation.Horizontal,
+                Style = (Style)resources[typeof(ScrollBar)]
+            };
 
-        var snapshot = DrawingThemeSnapshot.FromTheme(theme);
+            Assert.True(scrollBar.ApplyTemplate());
 
-        Assert.True(snapshot.Surface.IsFrozen);
-        Assert.True(snapshot.GridLinePen.IsFrozen);
+            var track = (Track?)scrollBar.Template.FindName("PART_Track", scrollBar);
+            Assert.NotNull(track);
+            Assert.False(track!.IsDirectionReversed);
+        });
+    }
+
+    private static void RunOnSta(Action action)
+    {
+        Exception? exception = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                lock (WpfLock)
+                    action();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            finally
+            {
+                var application = Application.Current;
+                if (application is not null && application.Dispatcher.CheckAccess())
+                    application.Shutdown();
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        if (exception is not null)
+            ExceptionDispatchInfo.Capture(exception).Throw();
+    }
+
+    /// <summary>
+    /// Verifies XAML-loadable CopperSkin resources theme standard controls before app startup runs.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesLoadForDesignerSurfaces()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            Assert.IsType<SolidColorBrush>(resources["color.accent.primary"]);
+            Assert.True(CountDefaultStyleDictionaries(resources) > 0);
+        });
     }
 
     /// <summary>
@@ -137,45 +200,7 @@ public sealed class WpfThemeTests
             Assert.Same(merged, element.Resources.MergedDictionaries[0]);
         });
     }
-
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                lock (WpfLock)
-                    action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            finally
-            {
-                var application = Application.Current;
-                if (application is not null && application.Dispatcher.CheckAccess())
-                    application.Shutdown();
-            }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (exception is not null)
-            ExceptionDispatchInfo.Capture(exception).Throw();
-    }
-
-    private static int CountDefaultStyleDictionaries(ResourceDictionary resources)
-    {
-        var count = resources.Contains("CopperSkin.Internal.DefaultControlStyles")
-            || resources.Source?.OriginalString.Contains("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", StringComparison.OrdinalIgnoreCase) == true
-            ? 1
-            : 0;
-        foreach (var dictionary in resources.MergedDictionaries)
-            count += CountDefaultStyleDictionaries(dictionary);
-        return count;
-    }
+    private static readonly object WpfLock = new();
 }
 
 /// <summary>

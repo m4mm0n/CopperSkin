@@ -26,30 +26,11 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ThemeDefinition
 {
-    /// <summary>
-    /// Gets or sets the stable theme identifier used in packs and runtime lookup.
-    /// </summary>
-    public string Id { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the display name shown in designer, sample, and host application theme pickers.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the optional parent theme id whose tokens are inherited first.
     /// </summary>
     public string? BaseThemeId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the canonical and legacy-compatible token values owned by this theme.
-    /// </summary>
-    public Dictionary<string, string> Tokens { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Gets or sets optional designer, authoring, and packaging metadata for this theme.
-    /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Creates a deep editable copy of the current value.
@@ -65,4 +46,23 @@ public sealed class ThemeDefinition
             Metadata = new Dictionary<string, string>(Metadata, StringComparer.OrdinalIgnoreCase)
         };
     }
+    /// <summary>
+    /// Gets or sets the stable theme identifier used in packs and runtime lookup.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets optional designer, authoring, and packaging metadata for this theme.
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets or sets the display name shown in designer, sample, and host application theme pickers.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the canonical and legacy-compatible token values owned by this theme.
+    /// </summary>
+    public Dictionary<string, string> Tokens { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

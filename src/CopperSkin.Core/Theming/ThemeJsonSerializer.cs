@@ -42,7 +42,7 @@ public static class ThemeJsonSerializer
     /// </summary>
     public static ThemePack ReadPack(string path)
     {
-        string json = File.ReadAllText(path);
+        var json = File.ReadAllText(path);
         return JsonSerializer.Deserialize<ThemePack>(json, Options) ?? new ThemePack();
     }
 
@@ -51,7 +51,7 @@ public static class ThemeJsonSerializer
     /// </summary>
     public static void WritePack(string path, ThemePack pack)
     {
-        string? directory = Path.GetDirectoryName(path);
+        var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
             Directory.CreateDirectory(directory);
 

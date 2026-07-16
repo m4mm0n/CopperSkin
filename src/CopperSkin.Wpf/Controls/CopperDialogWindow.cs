@@ -32,48 +32,6 @@ namespace CopperSkin.Wpf.Controls;
 /// </summary>
 internal sealed class CopperDialogWindow : CopperWindow
 {
-    private readonly MessageBoxButton _buttons;
-    private readonly CopperTaskDialogIcon _icon;
-
-    /// <summary>
-    /// Builds a compact themed dialog shell with MessageBox-compatible result handling.
-    /// </summary>
-    public CopperDialogWindow(
-        string title,
-        string message,
-        MessageBoxButton buttons,
-        string primaryButtonText = "OK",
-        string secondaryButtonText = "Cancel",
-        CopperTaskDialogIcon icon = CopperTaskDialogIcon.None)
-    {
-        _buttons = buttons;
-        _icon = icon;
-        Title = title;
-        Width = 520;
-        SizeToContent = SizeToContent.Height;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        ResizeMode = ResizeMode.NoResize;
-        PrimaryButtonText = primaryButtonText;
-        SecondaryButtonText = secondaryButtonText;
-        SetResourceReference(BackgroundProperty, "color.surface.deep");
-        SetResourceReference(ForegroundProperty, "color.text.primary");
-        Content = Build(message);
-    }
-
-    /// <summary>
-    /// Gets the MessageBox-compatible result selected by the user.
-    /// </summary>
-    public MessageBoxResult Result { get; private set; } = MessageBoxResult.Cancel;
-
-    /// <summary>
-    /// Gets or sets the caption displayed on the primary dialog button.
-    /// </summary>
-    public string PrimaryButtonText { get; set; }
-
-    /// <summary>
-    /// Gets or sets the caption displayed on the secondary dialog button.
-    /// </summary>
-    public string SecondaryButtonText { get; set; }
 
     /// <summary>
     /// Builds the full themed WPF visual tree for the component.
@@ -132,9 +90,7 @@ internal sealed class CopperDialogWindow : CopperWindow
             Grid.SetColumn(textColumn, 1);
         }
         else
-        {
             Grid.SetColumnSpan(textColumn, 2);
-        }
         content.Children.Add(textColumn);
 
         var title = new TextBlock
@@ -173,14 +129,18 @@ internal sealed class CopperDialogWindow : CopperWindow
             HorizontalAlignment = HorizontalAlignment.Right
         };
         tray.Child = buttons;
-        var ok = new Button { Content = PrimaryButtonText, MinWidth = 108, MinHeight = 32, Margin = new Thickness(8, 0, 0, 0), IsDefault = true };
-        ok.Click += (_, _) => { Result = MessageBoxResult.OK; DialogResult = true; };
+        var isYesNo = _buttons is MessageBoxButton.YesNo or MessageBoxButton.YesNoCancel;
+        var primaryLabel = isYesNo && PrimaryButtonText == "OK" ? "Yes" : PrimaryButtonText;
+        var secondaryLabel = isYesNo && SecondaryButtonText == "Cancel" ? "No" : SecondaryButtonText;
+
+        var ok = new Button { Content = primaryLabel, MinWidth = 108, MinHeight = 32, Margin = new Thickness(8, 0, 0, 0), IsDefault = true };
+        ok.Click += (_, _) => { Result = isYesNo ? MessageBoxResult.Yes : MessageBoxResult.OK; DialogResult = true; };
         buttons.Children.Add(ok);
 
         if (_buttons is MessageBoxButton.OKCancel or MessageBoxButton.YesNo or MessageBoxButton.YesNoCancel)
         {
-            var cancel = new Button { Content = SecondaryButtonText, MinWidth = 108, MinHeight = 32, Margin = new Thickness(8, 0, 0, 0), IsCancel = true };
-            cancel.Click += (_, _) => { Result = MessageBoxResult.Cancel; DialogResult = false; };
+            var cancel = new Button { Content = secondaryLabel, MinWidth = 108, MinHeight = 32, Margin = new Thickness(8, 0, 0, 0), IsCancel = true };
+            cancel.Click += (_, _) => { Result = isYesNo ? MessageBoxResult.No : MessageBoxResult.Cancel; DialogResult = false; };
             buttons.Children.Add(cancel);
         }
 
@@ -189,22 +149,57 @@ internal sealed class CopperDialogWindow : CopperWindow
         return shell;
     }
 
+    /// <summary>
+    /// Builds a compact themed dialog shell with MessageBox-compatible result handling.
+    /// </summary>
+    public CopperDialogWindow(
+        string title,
+        string message,
+        MessageBoxButton buttons,
+        string primaryButtonText = "OK",
+        string secondaryButtonText = "Cancel",
+        CopperTaskDialogIcon icon = CopperTaskDialogIcon.None)
+    {
+        _buttons = buttons;
+        _icon = icon;
+        Title = title;
+        Width = 520;
+        SizeToContent = SizeToContent.Height;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        ResizeMode = ResizeMode.NoResize;
+        PrimaryButtonText = primaryButtonText;
+        SecondaryButtonText = secondaryButtonText;
+        SetResourceReference(BackgroundProperty, "color.surface.deep");
+        SetResourceReference(ForegroundProperty, "color.text.primary");
+        Content = Build(message);
+    }
+
+    /// <summary>
+    /// Gets or sets the caption displayed on the primary dialog button.
+    /// </summary>
+    public string PrimaryButtonText { get; set; }
+
+    /// <summary>
+    /// Gets the MessageBox-compatible result selected by the user.
+    /// </summary>
+    public MessageBoxResult Result { get; private set; } = MessageBoxResult.Cancel;
+
+    /// <summary>
+    /// Gets or sets the caption displayed on the secondary dialog button.
+    /// </summary>
+    public string SecondaryButtonText { get; set; }
+
     private static class Win32StockIconSource
     {
         private const int IdiApplication = 32512;
         private const int IdiError = 32513;
-        private const int IdiQuestion = 32514;
-        private const int IdiWarning = 32515;
         private const int IdiInformation = 32516;
+        private const int IdiQuestion = 32514;
         private const int IdiShield = 32518;
+        private const int IdiWarning = 32515;
 
-        public static ImageSource? TryCreate(CopperTaskDialogIcon icon)
-        {
-            var handle = LoadIcon(IntPtr.Zero, new IntPtr(ToResourceId(icon)));
-            return handle == IntPtr.Zero
-                ? null
-                : Imaging.CreateBitmapSourceFromHIcon(handle, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(32, 32));
-        }
+        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = false)]
+        private static extern IntPtr LoadIcon(IntPtr hInstance, IntPtr lpIconName);
 
         private static int ToResourceId(CopperTaskDialogIcon icon) => icon switch
         {
@@ -217,7 +212,14 @@ internal sealed class CopperDialogWindow : CopperWindow
             _ => IdiInformation
         };
 
-        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = false)]
-        private static extern IntPtr LoadIcon(IntPtr hInstance, IntPtr lpIconName);
+        public static ImageSource? TryCreate(CopperTaskDialogIcon icon)
+        {
+            var handle = LoadIcon(IntPtr.Zero, new IntPtr(ToResourceId(icon)));
+            return handle == IntPtr.Zero
+                ? null
+                : Imaging.CreateBitmapSourceFromHIcon(handle, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(32, 32));
+        }
     }
+    private readonly MessageBoxButton _buttons;
+    private readonly CopperTaskDialogIcon _icon;
 }

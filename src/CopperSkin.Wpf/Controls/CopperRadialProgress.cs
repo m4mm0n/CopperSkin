@@ -32,31 +32,59 @@ namespace CopperSkin.Wpf.Controls;
 /// </summary>
 public sealed class CopperRadialProgress : Control
 {
-    /// <summary>Identifies the <see cref="Minimum" /> dependency property.</summary>
-    public static readonly DependencyProperty MinimumProperty =
-        DependencyProperty.Register(nameof(Minimum), typeof(double), typeof(CopperRadialProgress),
-            new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>Identifies the <see cref="Maximum" /> dependency property.</summary>
-    public static readonly DependencyProperty MaximumProperty =
-        DependencyProperty.Register(nameof(Maximum), typeof(double), typeof(CopperRadialProgress),
-            new FrameworkPropertyMetadata(100d, FrameworkPropertyMetadataOptions.AffectsRender));
-
-    /// <summary>Identifies the <see cref="Value" /> dependency property.</summary>
-    public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(double), typeof(CopperRadialProgress),
-            new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender));
+    /// <summary>Gets or sets the short label rendered below the percentage.</summary>
+    public string Caption
+    {
+        get => (string)GetValue(CaptionProperty);
+        set => SetValue(CaptionProperty, value);
+    }
 
     /// <summary>Identifies the <see cref="Caption" /> dependency property.</summary>
     public static readonly DependencyProperty CaptionProperty =
         DependencyProperty.Register(nameof(Caption), typeof(string), typeof(CopperRadialProgress),
             new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>Gets or sets the lower bound used to calculate progress.</summary>
-    public double Minimum
+    static CopperRadialProgress()
     {
-        get => (double)GetValue(MinimumProperty);
-        set => SetValue(MinimumProperty, value);
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(CopperRadialProgress), new FrameworkPropertyMetadata(typeof(CopperRadialProgress)));
+    }
+
+    private static void DrawArc(DrawingContext drawingContext, Point center, double radius, double thickness, double progress, Brush brush)
+    {
+        var startAngle = -90d;
+        var endAngle = startAngle + (360d * progress);
+        var start = PointOnCircle(center, radius, startAngle);
+        var end = PointOnCircle(center, radius, endAngle);
+        var geometry = new StreamGeometry();
+
+        using (var context = geometry.Open())
+        {
+            context.BeginFigure(start, false, false);
+            context.ArcTo(end, new Size(radius, radius), 0d, progress > 0.5d, SweepDirection.Clockwise, true, false);
+        }
+
+        geometry.Freeze();
+        drawingContext.DrawGeometry(null, new Pen(brush, thickness) { StartLineCap = PenLineCap.Flat, EndLineCap = PenLineCap.Flat }, geometry);
+    }
+
+    private void DrawCenteredText(DrawingContext drawingContext, string text, double size, FontWeight weight, Brush brush, double baselineCenterY)
+    {
+        var formatted = new FormattedText(
+            text,
+            CultureInfo.CurrentUICulture,
+            FlowDirection.LeftToRight,
+            new Typeface(FontFamily, FontStyles.Normal, weight, FontStretches.Normal),
+            Math.Max(8d, size),
+            brush,
+            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+        drawingContext.DrawText(formatted, new Point((ActualWidth - formatted.Width) / 2d, baselineCenterY - formatted.Height / 2d));
+    }
+
+    private Brush GetBrush(string resourceKey, Brush fallback)
+    {
+        return TryFindResource(resourceKey) as Brush ?? fallback;
     }
 
     /// <summary>Gets or sets the upper bound used to calculate progress.</summary>
@@ -66,24 +94,21 @@ public sealed class CopperRadialProgress : Control
         set => SetValue(MaximumProperty, value);
     }
 
-    /// <summary>Gets or sets the current progress value.</summary>
-    public double Value
-    {
-        get => (double)GetValue(ValueProperty);
-        set => SetValue(ValueProperty, value);
-    }
+    /// <summary>Identifies the <see cref="Maximum" /> dependency property.</summary>
+    public static readonly DependencyProperty MaximumProperty =
+        DependencyProperty.Register(nameof(Maximum), typeof(double), typeof(CopperRadialProgress),
+            new FrameworkPropertyMetadata(100d, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>Gets or sets the short label rendered below the percentage.</summary>
-    public string Caption
+    /// <summary>Gets or sets the lower bound used to calculate progress.</summary>
+    public double Minimum
     {
-        get => (string)GetValue(CaptionProperty);
-        set => SetValue(CaptionProperty, value);
+        get => (double)GetValue(MinimumProperty);
+        set => SetValue(MinimumProperty, value);
     }
-
-    static CopperRadialProgress()
-    {
-        DefaultStyleKeyProperty.OverrideMetadata(typeof(CopperRadialProgress), new FrameworkPropertyMetadata(typeof(CopperRadialProgress)));
-    }
+    /// <summary>Identifies the <see cref="Minimum" /> dependency property.</summary>
+    public static readonly DependencyProperty MinimumProperty =
+        DependencyProperty.Register(nameof(Minimum), typeof(double), typeof(CopperRadialProgress),
+            new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender));
 
     /// <inheritdoc />
     protected override void OnRender(DrawingContext drawingContext)
@@ -116,46 +141,21 @@ public sealed class CopperRadialProgress : Control
             DrawCenteredText(drawingContext, Caption.ToUpperInvariant(), size * 0.052d, FontWeights.SemiBold, secondaryBrush, center.Y + (size * 0.14d));
     }
 
-    private static void DrawArc(DrawingContext drawingContext, Point center, double radius, double thickness, double progress, Brush brush)
-    {
-        var startAngle = -90d;
-        var endAngle = startAngle + (360d * progress);
-        var start = PointOnCircle(center, radius, startAngle);
-        var end = PointOnCircle(center, radius, endAngle);
-        var geometry = new StreamGeometry();
-
-        using (var context = geometry.Open())
-        {
-            context.BeginFigure(start, false, false);
-            context.ArcTo(end, new Size(radius, radius), 0d, progress > 0.5d, SweepDirection.Clockwise, true, false);
-        }
-
-        geometry.Freeze();
-        drawingContext.DrawGeometry(null, new Pen(brush, thickness) { StartLineCap = PenLineCap.Flat, EndLineCap = PenLineCap.Flat }, geometry);
-    }
-
     private static Point PointOnCircle(Point center, double radius, double angleDegrees)
     {
         var angle = angleDegrees * Math.PI / 180d;
         return new Point(center.X + radius * Math.Cos(angle), center.Y + radius * Math.Sin(angle));
     }
 
-    private void DrawCenteredText(DrawingContext drawingContext, string text, double size, FontWeight weight, Brush brush, double baselineCenterY)
+    /// <summary>Gets or sets the current progress value.</summary>
+    public double Value
     {
-        var formatted = new FormattedText(
-            text,
-            CultureInfo.CurrentUICulture,
-            FlowDirection.LeftToRight,
-            new Typeface(FontFamily, FontStyles.Normal, weight, FontStretches.Normal),
-            Math.Max(8d, size),
-            brush,
-            VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-        drawingContext.DrawText(formatted, new Point((ActualWidth - formatted.Width) / 2d, baselineCenterY - formatted.Height / 2d));
+        get => (double)GetValue(ValueProperty);
+        set => SetValue(ValueProperty, value);
     }
 
-    private Brush GetBrush(string resourceKey, Brush fallback)
-    {
-        return TryFindResource(resourceKey) as Brush ?? fallback;
-    }
+    /// <summary>Identifies the <see cref="Value" /> dependency property.</summary>
+    public static readonly DependencyProperty ValueProperty =
+        DependencyProperty.Register(nameof(Value), typeof(double), typeof(CopperRadialProgress),
+            new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender));
 }

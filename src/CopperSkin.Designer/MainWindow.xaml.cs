@@ -28,6 +28,7 @@ using CopperSkin.Core.Theming;
 using CopperSkin.Wpf.Controls;
 using Microsoft.Win32;
 using QuickLog;
+using System.Linq;
 
 namespace CopperSkin.Designer;
 
@@ -36,13 +37,127 @@ namespace CopperSkin.Designer;
 /// </summary>
 public partial class MainWindow : CopperWindow, INotifyPropertyChanged
 {
+
     /// <summary>
-    /// Holds the built-in catalog that the designer clones into editable preview themes.
+    /// Validates the edited theme, applies its resources, updates drawing surfaces, and refreshes status text.
     /// </summary>
-    private readonly ThemePack _runtimePack = BuiltInThemeCatalog.Create();
-    private ThemeDefinition? _selectedTheme;
-    private TokenRow? _selectedToken;
-    private string? _lastLoggedThemeId;
+    private void ApplyCurrentTheme()
+    {
+        if (_selectedTheme is null)
+            return;
+
+        var tempPack = new ThemePack { Id = "designer.preview", Name = "Designer Preview", Themes = [_selectedTheme.Clone()] };
+        var diagnostics = new ThemeValidator().Validate(tempPack);
+        Diagnostics.Clear();
+        foreach (var diagnostic in diagnostics)
+            Diagnostics.Add(diagnostic.ToString());
+
+        var resolved = new ThemeResolver().Resolve(tempPack, _selectedTheme.Id);
+        Wpf.Resources.CopperSkinResourceEmitter.Apply(Application.Current.Resources, resolved);
+        Wpf.Drawing.DrawingThemeRegistry.Apply(Wpf.Drawing.DrawingThemeSnapshot.FromTheme(resolved));
+        StatusText = $"Previewing {_selectedTheme.Name} - {diagnostics.Count} diagnostics";
+        OnPropertyChanged(nameof(StatusText));
+    }
+
+    /// <summary>
+    /// Writes the selected token value into the editable theme and refreshes the preview.
+    /// </summary>
+    private void ApplyTokenEdit(bool logEdit)
+    {
+        if (_selectedTheme is null || SelectedToken is null)
+            return;
+
+        _selectedTheme.Tokens[SelectedToken.Key] = SelectedToken.Value;
+        if (logEdit)
+            Log(LogType.Info, $"Applied token {SelectedToken.Key}");
+        ApplyCurrentTheme();
+    }
+
+    /// <summary>
+    /// Applies the currently edited token value when the user clicks the apply button.
+    /// </summary>
+    private void ApplyToken_Click(object sender, RoutedEventArgs e) => ApplyTokenEdit(logEdit: true);
+
+    /// <summary>
+    /// Gets the validation diagnostics shown in the designer.
+    /// </summary>
+    public ObservableCollection<string> Diagnostics { get; }
+
+    /// <summary>
+    /// Clones the selected theme into a new editable custom theme.
+    /// </summary>
+    private void DuplicateTheme_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedTheme is null)
+            return;
+
+        var copy = _selectedTheme.Clone();
+        copy.Name = $"{copy.Name} Custom";
+        copy.Id = ThemeNames.Slug(copy.Name);
+        Themes.Add(copy);
+        ThemeList.SelectedItem = copy;
+        Log(LogType.Info, $"Duplicated theme {copy.Name}");
+    }
+
+    /// <summary>
+    /// Gets the recent Designer event log shown in the shell.
+    /// </summary>
+    public ObservableCollection<string> EventLog { get; }
+
+    /// <summary>
+    /// Exports the current editable theme pack to a CopperSkin JSON theme-pack file.
+    /// </summary>
+    private void ExportThemePack_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "CopperSkin theme pack (*.json)|*.json",
+            FileName = "copperskin-theme-pack.json"
+        };
+        if (dialog.ShowDialog(this) != true)
+            return;
+
+        var pack = new ThemePack { Id = "designer.export", Name = "CopperSkin Designer Export" };
+        pack.Themes.AddRange(Themes.Select(static t => t.Clone()));
+        ThemeJsonSerializer.WritePack(dialog.FileName, pack);
+        StatusText = $"Exported {dialog.FileName}";
+        OnPropertyChanged(nameof(StatusText));
+        Log(LogType.Info, $"Exported theme pack to {dialog.FileName}");
+    }
+
+    /// <summary>
+    /// Rebuilds the token grid from the selected theme and applies it to the preview resources.
+    /// </summary>
+    private void LoadSelectedTheme()
+    {
+        if (_selectedTheme is null)
+            return;
+
+        Tokens.Clear();
+        foreach (var pair in _selectedTheme.Tokens.OrderBy(static t => t.Key, StringComparer.OrdinalIgnoreCase))
+            Tokens.Add(new TokenRow(pair.Key, pair.Value));
+
+        if (!string.Equals(_lastLoggedThemeId, _selectedTheme.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            Log(LogType.Info, $"Selected theme {_selectedTheme.Name}");
+            _lastLoggedThemeId = _selectedTheme.Id;
+        }
+
+        ApplyCurrentTheme();
+    }
+
+    private void Log(LogType type, string message, Exception? exception = null)
+    {
+        var logger = LogManager.GetDefaultLogger();
+        if (exception is null)
+            logger?.Log(type, message);
+        else
+            logger?.Log(type, message, exception);
+
+        EventLog.Insert(0, $"{DateTimeOffset.Now:HH:mm:ss} [{type}] {message}");
+        while (EventLog.Count > 200)
+            EventLog.RemoveAt(EventLog.Count - 1);
+    }
 
     /// <summary>
     /// Initializes the designer window, loads editable themes, and selects the first preview theme.
@@ -74,19 +189,9 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Raised when designer bindable state changes and the WPF view needs to refresh.
+    /// Raises a property-change notification for WPF binding refresh.
     /// </summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>
-    /// Gets the editable theme catalog displayed by the designer.
-    /// </summary>
-    public ObservableCollection<ThemeDefinition> Themes { get; }
-
-    /// <summary>
-    /// Gets the token rows for the currently selected theme.
-    /// </summary>
-    public ObservableCollection<TokenRow> Tokens { get; }
+    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     /// <summary>
     /// Gets representative standard WPF rows shown by the preview tab.
@@ -94,19 +199,9 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     public ObservableCollection<PreviewRow> PreviewRows { get; }
 
     /// <summary>
-    /// Gets the canonical token catalog shown inside the designer.
+    /// Raised when designer bindable state changes and the WPF view needs to refresh.
     /// </summary>
-    public ObservableCollection<TokenCatalogRow> TokenCatalog { get; }
-
-    /// <summary>
-    /// Gets the validation diagnostics shown in the designer.
-    /// </summary>
-    public ObservableCollection<string> Diagnostics { get; }
-
-    /// <summary>
-    /// Gets the recent Designer event log shown in the shell.
-    /// </summary>
-    public ObservableCollection<string> EventLog { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// Gets or sets the token row currently selected in the live token grid.
@@ -121,133 +216,6 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     /// Gets the designer status text displayed in the status bar.
     /// </summary>
     public string StatusText { get; private set; } = "Ready";
-
-    /// <summary>
-    /// Loads tokens for the selected theme and refreshes the live preview.
-    /// </summary>
-    private void ThemeList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        _selectedTheme = ThemeList.SelectedItem as ThemeDefinition;
-        LoadSelectedTheme();
-    }
-
-    /// <summary>
-    /// Rebuilds the token grid from the selected theme and applies it to the preview resources.
-    /// </summary>
-    private void LoadSelectedTheme()
-    {
-        if (_selectedTheme is null)
-            return;
-
-        Tokens.Clear();
-        foreach (var pair in _selectedTheme.Tokens.OrderBy(static t => t.Key, StringComparer.OrdinalIgnoreCase))
-            Tokens.Add(new TokenRow(pair.Key, pair.Value));
-
-        if (!string.Equals(_lastLoggedThemeId, _selectedTheme.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            Log(LogType.Info, $"Selected theme {_selectedTheme.Name}");
-            _lastLoggedThemeId = _selectedTheme.Id;
-        }
-
-        ApplyCurrentTheme();
-    }
-
-    /// <summary>
-    /// Applies the currently edited token value when the user clicks the apply button.
-    /// </summary>
-    private void ApplyToken_Click(object sender, RoutedEventArgs e) => ApplyTokenEdit(logEdit: true);
-
-    /// <summary>
-    /// Live-applies token edits as the value text box changes.
-    /// </summary>
-    private void TokenValueBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyTokenEdit(logEdit: false);
-
-    /// <summary>
-    /// Writes the selected token value into the editable theme and refreshes the preview.
-    /// </summary>
-    private void ApplyTokenEdit(bool logEdit)
-    {
-        if (_selectedTheme is null || SelectedToken is null)
-            return;
-
-        _selectedTheme.Tokens[SelectedToken.Key] = SelectedToken.Value;
-        if (logEdit)
-            Log(LogType.Info, $"Applied token {SelectedToken.Key}");
-        ApplyCurrentTheme();
-    }
-
-    /// <summary>
-    /// Validates the edited theme, applies its resources, updates drawing surfaces, and refreshes status text.
-    /// </summary>
-    private void ApplyCurrentTheme()
-    {
-        if (_selectedTheme is null)
-            return;
-
-        var tempPack = new ThemePack { Id = "designer.preview", Name = "Designer Preview", Themes = [_selectedTheme.Clone()] };
-        var diagnostics = new ThemeValidator().Validate(tempPack);
-        Diagnostics.Clear();
-        foreach (var diagnostic in diagnostics)
-            Diagnostics.Add(diagnostic.ToString());
-
-        var resolved = new ThemeResolver().Resolve(tempPack, _selectedTheme.Id);
-        Wpf.Resources.CopperSkinResourceEmitter.Apply(Application.Current.Resources, resolved);
-        Wpf.Drawing.DrawingThemeRegistry.Apply(Wpf.Drawing.DrawingThemeSnapshot.FromTheme(resolved));
-        StatusText = $"Previewing {_selectedTheme.Name} - {diagnostics.Count} diagnostics";
-        OnPropertyChanged(nameof(StatusText));
-    }
-
-    /// <summary>
-    /// Clones the selected theme into a new editable custom theme.
-    /// </summary>
-    private void DuplicateTheme_Click(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTheme is null)
-            return;
-
-        var copy = _selectedTheme.Clone();
-        copy.Name = $"{copy.Name} Custom";
-        copy.Id = ThemeNames.Slug(copy.Name);
-        Themes.Add(copy);
-        ThemeList.SelectedItem = copy;
-        Log(LogType.Info, $"Duplicated theme {copy.Name}");
-    }
-
-    /// <summary>
-    /// Validates the entire editable pack and lists all diagnostics in the designer.
-    /// </summary>
-    private void ValidatePack_Click(object sender, RoutedEventArgs e)
-    {
-        var pack = new ThemePack { Id = "designer.current", Name = "Designer Current" };
-        pack.Themes.AddRange(Themes.Select(static t => t.Clone()));
-        Diagnostics.Clear();
-        foreach (var diagnostic in new ThemeValidator().Validate(pack))
-            Diagnostics.Add(diagnostic.ToString());
-        StatusText = $"Validated {pack.Themes.Count} themes";
-        OnPropertyChanged(nameof(StatusText));
-        Log(LogType.Info, $"Validated {pack.Themes.Count} themes with {Diagnostics.Count} diagnostics");
-    }
-
-    /// <summary>
-    /// Exports the current editable theme pack to a CopperSkin JSON theme-pack file.
-    /// </summary>
-    private void ExportThemePack_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new SaveFileDialog
-        {
-            Filter = "CopperSkin theme pack (*.json)|*.json",
-            FileName = "copperskin-theme-pack.json"
-        };
-        if (dialog.ShowDialog(this) != true)
-            return;
-
-        var pack = new ThemePack { Id = "designer.export", Name = "CopperSkin Designer Export" };
-        pack.Themes.AddRange(Themes.Select(static t => t.Clone()));
-        ThemeJsonSerializer.WritePack(dialog.FileName, pack);
-        StatusText = $"Exported {dialog.FileName}";
-        OnPropertyChanged(nameof(StatusText));
-        Log(LogType.Info, $"Exported theme pack to {dialog.FileName}");
-    }
 
     /// <summary>
     /// Opens the themed TaskDialog preview from the designer command surface.
@@ -265,22 +233,55 @@ public partial class MainWindow : CopperWindow, INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Raises a property-change notification for WPF binding refresh.
+    /// Loads tokens for the selected theme and refreshes the live preview.
     /// </summary>
-    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    private void Log(LogType type, string message, Exception? exception = null)
+    private void ThemeList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        var logger = LogManager.GetDefaultLogger();
-        if (exception is null)
-            logger?.Log(type, message);
-        else
-            logger?.Log(type, message, exception);
-
-        EventLog.Insert(0, $"{DateTimeOffset.Now:HH:mm:ss} [{type}] {message}");
-        while (EventLog.Count > 200)
-            EventLog.RemoveAt(EventLog.Count - 1);
+        _selectedTheme = ThemeList.SelectedItem as ThemeDefinition;
+        LoadSelectedTheme();
     }
+
+    /// <summary>
+    /// Gets the editable theme catalog displayed by the designer.
+    /// </summary>
+    public ObservableCollection<ThemeDefinition> Themes { get; }
+
+    /// <summary>
+    /// Gets the canonical token catalog shown inside the designer.
+    /// </summary>
+    public ObservableCollection<TokenCatalogRow> TokenCatalog { get; }
+
+    /// <summary>
+    /// Gets the token rows for the currently selected theme.
+    /// </summary>
+    public ObservableCollection<TokenRow> Tokens { get; }
+
+    /// <summary>
+    /// Live-applies token edits as the value text box changes.
+    /// </summary>
+    private void TokenValueBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => ApplyTokenEdit(logEdit: false);
+
+    /// <summary>
+    /// Validates the entire editable pack and lists all diagnostics in the designer.
+    /// </summary>
+    private void ValidatePack_Click(object sender, RoutedEventArgs e)
+    {
+        var pack = new ThemePack { Id = "designer.current", Name = "Designer Current" };
+        pack.Themes.AddRange(Themes.Select(static t => t.Clone()));
+        Diagnostics.Clear();
+        foreach (var diagnostic in new ThemeValidator().Validate(pack))
+            Diagnostics.Add(diagnostic.ToString());
+        StatusText = $"Validated {pack.Themes.Count} themes";
+        OnPropertyChanged(nameof(StatusText));
+        Log(LogType.Info, $"Validated {pack.Themes.Count} themes with {Diagnostics.Count} diagnostics");
+    }
+    private string? _lastLoggedThemeId;
+    /// <summary>
+    /// Holds the built-in catalog that the designer clones into editable preview themes.
+    /// </summary>
+    private readonly ThemePack _runtimePack = BuiltInThemeCatalog.Create();
+    private ThemeDefinition? _selectedTheme;
+    private TokenRow? _selectedToken;
 }
 
 /// <summary>
@@ -293,7 +294,16 @@ public sealed record PreviewRow(string Component, string State, string Notes);
 /// </summary>
 public sealed class TokenRow : INotifyPropertyChanged
 {
-    private string _value;
+
+    /// <summary>
+    /// Gets the token key edited by this row.
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Raised when the editable token value changes in the designer grid.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// Creates an editable token row with a stable token key and initial value.
@@ -303,16 +313,6 @@ public sealed class TokenRow : INotifyPropertyChanged
         Key = key;
         _value = value;
     }
-
-    /// <summary>
-    /// Raised when the editable token value changes in the designer grid.
-    /// </summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>
-    /// Gets the token key edited by this row.
-    /// </summary>
-    public string Key { get; }
 
     /// <summary>
     /// Gets or sets the editable token value shown in the designer grid.
@@ -328,6 +328,7 @@ public sealed class TokenRow : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
         }
     }
+    private string _value;
 }
 
 /// <summary>
@@ -335,6 +336,31 @@ public sealed class TokenRow : INotifyPropertyChanged
 /// </summary>
 public sealed class TokenCatalogRow
 {
+
+    /// <summary>
+    /// Gets the default value emitted for this token.
+    /// </summary>
+    public string DefaultValue { get; }
+
+    /// <summary>
+    /// Gets the token description shown in the catalog grid.
+    /// </summary>
+    public string Description { get; }
+
+    /// <summary>
+    /// Gets the token family shown in the catalog grid.
+    /// </summary>
+    public string Group { get; }
+
+    /// <summary>
+    /// Gets the token key shown in the catalog grid.
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the token is required for a complete theme.
+    /// </summary>
+    public bool Required { get; }
     /// <summary>
     /// Creates a designer-friendly row from a core token definition.
     /// </summary>
@@ -349,32 +375,7 @@ public sealed class TokenCatalogRow
     }
 
     /// <summary>
-    /// Gets the token family shown in the catalog grid.
-    /// </summary>
-    public string Group { get; }
-
-    /// <summary>
-    /// Gets the token key shown in the catalog grid.
-    /// </summary>
-    public string Key { get; }
-
-    /// <summary>
     /// Gets the token value type shown in the catalog grid.
     /// </summary>
     public string Type { get; }
-
-    /// <summary>
-    /// Gets the default value emitted for this token.
-    /// </summary>
-    public string DefaultValue { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether the token is required for a complete theme.
-    /// </summary>
-    public bool Required { get; }
-
-    /// <summary>
-    /// Gets the token description shown in the catalog grid.
-    /// </summary>
-    public string Description { get; }
 }

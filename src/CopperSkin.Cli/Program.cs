@@ -34,6 +34,106 @@ namespace CopperSkin.Cli;
 /// </summary>
 public static class Program
 {
+
+    /// <summary>
+    /// Prints adapter guidance for common WPF ecosystems.
+    /// </summary>
+    private static int Adapters()
+    {
+        ThemeTooling.WriteAdapterCatalog(Console.Out);
+        return 0;
+    }
+
+    /// <summary>
+    /// Reads an optional positional argument with a default fallback.
+    /// </summary>
+    private static string Arg(string[] args, int index, string fallback) => args.Length > index ? args[index] : fallback;
+
+    /// <summary>
+    /// Scans a WPF source tree for hard-coded colors that bypass CopperSkin tokens.
+    /// </summary>
+    private static int Audit(string root)
+    {
+        var findings = HardCodedColorAudit.ScanDirectory(root);
+        foreach (var finding in findings)
+            Console.WriteLine($"{finding.File}:{finding.Line}:{finding.Column} {finding.Code} {finding.Message}");
+
+        Console.WriteLine($"Audit complete: {findings.Count} hard-coded color finding(s).");
+        return 0;
+    }
+
+    /// <summary>
+    /// Writes a deterministic theme token baseline for visual regression workflows.
+    /// </summary>
+    private static int Baseline(string packPath, string outputPath)
+    {
+        ThemeTooling.WriteBaseline(ReadPack(packPath), outputPath);
+        Console.WriteLine($"Baseline written to {outputPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Compares two theme packs and writes token differences.
+    /// </summary>
+    private static int Diff(string leftPath, string rightPath)
+    {
+        var changes = ThemeTooling.WriteDiff(ReadPack(leftPath), ReadPack(rightPath), Console.Out);
+        Console.WriteLine($"Diff complete: {changes} change(s).");
+        return changes == 0 ? 0 : 3;
+    }
+
+    /// <summary>
+    /// Writes the built-in amChipper-inspired theme pack to a JSON file.
+    /// </summary>
+    private static int ExportBuiltins(string path)
+    {
+        ThemeJsonSerializer.WritePack(path, BuiltInThemeCatalog.Create());
+        Console.WriteLine($"Wrote {path}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Generates a static theme gallery and visual baseline manifest.
+    /// </summary>
+    private static int Gallery(string packPath, string outputDirectory)
+    {
+        ThemeTooling.WriteGallery(ReadPack(packPath), outputDirectory);
+        Console.WriteLine($"Gallery written to {outputDirectory}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Generates a reusable B-233 signing key pair.
+    /// </summary>
+    private static int Keygen(string privateKeyPath, string publicKeyPath)
+    {
+        var keyPair = ThemePackSigner.CreateKeyPair();
+        WriteSecret(privateKeyPath, keyPair.PrivateKeyHex);
+        WriteText(publicKeyPath, keyPair.PublicKeyHex);
+        Console.WriteLine($"Private key written to {privateKeyPath}");
+        Console.WriteLine($"Public key written to {publicKeyPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Prints all bundled theme names to standard output.
+    /// </summary>
+    private static int ListThemes()
+    {
+        foreach (var name in BuiltInThemeCatalog.ThemeNames)
+            Console.WriteLine(name);
+        return 0;
+    }
+
+    /// <summary>
+    /// Compresses a release directory into CopperSkin's custom LZHC-style archive.
+    /// </summary>
+    private static int Lzhc(string sourceDirectory, string outputPath)
+    {
+        LzhcArchive.Create(sourceDirectory, outputPath);
+        Console.WriteLine($"LZHC packed {sourceDirectory} -> {outputPath}");
+        return 0;
+    }
     /// <summary>
     /// Runs the CopperSkin CLI and returns a process-style exit code.
     /// </summary>
@@ -56,6 +156,53 @@ public static class Program
             LogManager.Shutdown();
         }
     }
+
+    /// <summary>
+    /// Writes a markdown migration report with token replacement guidance.
+    /// </summary>
+    private static int Migrate(string root, string reportPath)
+    {
+        ThemeTooling.WriteMigrationReport(root, reportPath);
+        Console.WriteLine($"Migration report written to {reportPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Packages a theme directory into the portable CopperSkin .cskin archive format.
+    /// </summary>
+    private static int Pack(string sourceDirectory, string outputPath)
+    {
+        ThemePackArchive.PackDirectory(sourceDirectory, outputPath);
+        Console.WriteLine($"Packed {sourceDirectory} -> {outputPath}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Prints the supported CopperSkin CLI commands.
+    /// </summary>
+    private static void PrintHelp()
+    {
+        Console.WriteLine("CopperSkin CLI");
+        Console.WriteLine("  list");
+        Console.WriteLine("  tokens");
+        Console.WriteLine("  export-builtins <theme-pack.json>");
+        Console.WriteLine("  validate <theme-pack.json>");
+        Console.WriteLine("  audit <wpf-source-root>");
+        Console.WriteLine("  migrate <wpf-source-root> <report.md>");
+        Console.WriteLine("  gallery <theme-pack.json> <directory>");
+        Console.WriteLine("  baseline <theme-pack.json> <visual-baseline.json>");
+        Console.WriteLine("  diff <left-theme-pack.json> <right-theme-pack.json>");
+        Console.WriteLine("  scaffold <directory>");
+        Console.WriteLine("  keygen <private.key> <public.key>");
+        Console.WriteLine("  sign <theme-pack.json> [out.json] [private.key]");
+        Console.WriteLine("  verify-signature <theme-pack.json> [public.key]");
+        Console.WriteLine("  adapters");
+        Console.WriteLine("  pack <directory> <out.cskin>");
+        Console.WriteLine("  unpack <in.cskin> <directory>");
+        Console.WriteLine("  lzhc <directory> <out.lzhc>");
+    }
+
+    private static ThemePack ReadPack(string path) => File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
 
     /// <summary>
     /// Dispatches command-line arguments to the requested CopperSkin maintenance command.
@@ -92,12 +239,26 @@ public static class Program
     }
 
     /// <summary>
-    /// Prints all bundled theme names to standard output.
+    /// Creates a starter theme pack with every recommended CopperSkin token.
     /// </summary>
-    private static int ListThemes()
+    private static int Scaffold(string outputDirectory)
     {
-        foreach (var name in BuiltInThemeCatalog.ThemeNames)
-            Console.WriteLine(name);
+        ThemeTooling.Scaffold(outputDirectory);
+        Console.WriteLine($"Starter theme scaffold written to {outputDirectory}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Signs a theme pack using a B-233 binary-field ECDSA metadata signature.
+    /// </summary>
+    private static int Sign(string packPath, string outputPath, string privateKeyPath)
+    {
+        outputPath = string.IsNullOrWhiteSpace(outputPath) ? packPath : outputPath;
+        var pack = ReadPack(packPath);
+        var privateKey = string.IsNullOrWhiteSpace(privateKeyPath) ? null : File.ReadAllText(privateKeyPath).Trim();
+        var signature = ThemePackSigner.Sign(pack, privateKeyHex: privateKey);
+        ThemeJsonSerializer.WritePack(outputPath, pack);
+        Console.WriteLine($"Signed {outputPath} with {pack.Metadata[ThemePackSigner.AlgorithmKey]} {signature}");
         return 0;
     }
 
@@ -111,12 +272,22 @@ public static class Program
     }
 
     /// <summary>
-    /// Writes the built-in amChipper-inspired theme pack to a JSON file.
+    /// Reports an unsupported command and prints the help text.
     /// </summary>
-    private static int ExportBuiltins(string path)
+    private static int Unknown(string command)
     {
-        ThemeJsonSerializer.WritePack(path, BuiltInThemeCatalog.Create());
-        Console.WriteLine($"Wrote {path}");
+        Console.Error.WriteLine($"Unknown command '{command}'.");
+        PrintHelp();
+        return 1;
+    }
+
+    /// <summary>
+    /// Extracts a .cskin archive to a target directory.
+    /// </summary>
+    private static int Unpack(string archivePath, string outputDirectory)
+    {
+        ThemePackArchive.Unpack(archivePath, outputDirectory);
+        Console.WriteLine($"Unpacked {archivePath} -> {outputDirectory}");
         return 0;
     }
 
@@ -136,193 +307,14 @@ public static class Program
     }
 
     /// <summary>
-    /// Scans a WPF source tree for hard-coded colors that bypass CopperSkin tokens.
-    /// </summary>
-    private static int Audit(string root)
-    {
-        var findings = HardCodedColorAudit.ScanDirectory(root);
-        foreach (var finding in findings)
-            Console.WriteLine($"{finding.File}:{finding.Line}:{finding.Column} {finding.Code} {finding.Message}");
-
-        Console.WriteLine($"Audit complete: {findings.Count} hard-coded color finding(s).");
-        return 0;
-    }
-
-    /// <summary>
-    /// Writes a markdown migration report with token replacement guidance.
-    /// </summary>
-    private static int Migrate(string root, string reportPath)
-    {
-        ThemeTooling.WriteMigrationReport(root, reportPath);
-        Console.WriteLine($"Migration report written to {reportPath}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Generates a static theme gallery and visual baseline manifest.
-    /// </summary>
-    private static int Gallery(string packPath, string outputDirectory)
-    {
-        ThemeTooling.WriteGallery(ReadPack(packPath), outputDirectory);
-        Console.WriteLine($"Gallery written to {outputDirectory}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Writes a deterministic theme token baseline for visual regression workflows.
-    /// </summary>
-    private static int Baseline(string packPath, string outputPath)
-    {
-        ThemeTooling.WriteBaseline(ReadPack(packPath), outputPath);
-        Console.WriteLine($"Baseline written to {outputPath}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Compares two theme packs and writes token differences.
-    /// </summary>
-    private static int Diff(string leftPath, string rightPath)
-    {
-        int changes = ThemeTooling.WriteDiff(ReadPack(leftPath), ReadPack(rightPath), Console.Out);
-        Console.WriteLine($"Diff complete: {changes} change(s).");
-        return changes == 0 ? 0 : 3;
-    }
-
-    /// <summary>
-    /// Creates a starter theme pack with every recommended CopperSkin token.
-    /// </summary>
-    private static int Scaffold(string outputDirectory)
-    {
-        ThemeTooling.Scaffold(outputDirectory);
-        Console.WriteLine($"Starter theme scaffold written to {outputDirectory}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Generates a reusable B-233 signing key pair.
-    /// </summary>
-    private static int Keygen(string privateKeyPath, string publicKeyPath)
-    {
-        ThemePackSigningKeyPair keyPair = ThemePackSigner.CreateKeyPair();
-        WriteSecret(privateKeyPath, keyPair.PrivateKeyHex);
-        WriteText(publicKeyPath, keyPair.PublicKeyHex);
-        Console.WriteLine($"Private key written to {privateKeyPath}");
-        Console.WriteLine($"Public key written to {publicKeyPath}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Signs a theme pack using a B-233 binary-field ECDSA metadata signature.
-    /// </summary>
-    private static int Sign(string packPath, string outputPath, string privateKeyPath)
-    {
-        outputPath = string.IsNullOrWhiteSpace(outputPath) ? packPath : outputPath;
-        ThemePack pack = ReadPack(packPath);
-        string? privateKey = string.IsNullOrWhiteSpace(privateKeyPath) ? null : File.ReadAllText(privateKeyPath).Trim();
-        string signature = ThemePackSigner.Sign(pack, privateKeyHex: privateKey);
-        ThemeJsonSerializer.WritePack(outputPath, pack);
-        Console.WriteLine($"Signed {outputPath} with {pack.Metadata[ThemePackSigner.AlgorithmKey]} {signature}");
-        return 0;
-    }
-
-    /// <summary>
     /// Verifies a signed theme pack.
     /// </summary>
     private static int VerifySignature(string packPath, string publicKeyPath)
     {
-        string? trustedPublicKey = string.IsNullOrWhiteSpace(publicKeyPath) ? null : File.ReadAllText(publicKeyPath).Trim();
-        bool valid = ThemePackSigner.Verify(ReadPack(packPath), trustedPublicKey);
+        var trustedPublicKey = string.IsNullOrWhiteSpace(publicKeyPath) ? null : File.ReadAllText(publicKeyPath).Trim();
+        var valid = ThemePackSigner.Verify(ReadPack(packPath), trustedPublicKey);
         Console.WriteLine(valid ? "Signature valid." : "Signature missing or invalid.");
         return valid ? 0 : 4;
-    }
-
-    /// <summary>
-    /// Prints adapter guidance for common WPF ecosystems.
-    /// </summary>
-    private static int Adapters()
-    {
-        ThemeTooling.WriteAdapterCatalog(Console.Out);
-        return 0;
-    }
-
-    /// <summary>
-    /// Packages a theme directory into the portable CopperSkin .cskin archive format.
-    /// </summary>
-    private static int Pack(string sourceDirectory, string outputPath)
-    {
-        ThemePackArchive.PackDirectory(sourceDirectory, outputPath);
-        Console.WriteLine($"Packed {sourceDirectory} -> {outputPath}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Extracts a .cskin archive to a target directory.
-    /// </summary>
-    private static int Unpack(string archivePath, string outputDirectory)
-    {
-        ThemePackArchive.Unpack(archivePath, outputDirectory);
-        Console.WriteLine($"Unpacked {archivePath} -> {outputDirectory}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Compresses a release directory into CopperSkin's custom LZHC-style archive.
-    /// </summary>
-    private static int Lzhc(string sourceDirectory, string outputPath)
-    {
-        LzhcArchive.Create(sourceDirectory, outputPath);
-        Console.WriteLine($"LZHC packed {sourceDirectory} -> {outputPath}");
-        return 0;
-    }
-
-    /// <summary>
-    /// Reports an unsupported command and prints the help text.
-    /// </summary>
-    private static int Unknown(string command)
-    {
-        Console.Error.WriteLine($"Unknown command '{command}'.");
-        PrintHelp();
-        return 1;
-    }
-
-    /// <summary>
-    /// Reads an optional positional argument with a default fallback.
-    /// </summary>
-    private static string Arg(string[] args, int index, string fallback) => args.Length > index ? args[index] : fallback;
-
-    private static ThemePack ReadPack(string path) => File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
-
-    /// <summary>
-    /// Prints the supported CopperSkin CLI commands.
-    /// </summary>
-    private static void PrintHelp()
-    {
-        Console.WriteLine("CopperSkin CLI");
-        Console.WriteLine("  list");
-        Console.WriteLine("  tokens");
-        Console.WriteLine("  export-builtins <theme-pack.json>");
-        Console.WriteLine("  validate <theme-pack.json>");
-        Console.WriteLine("  audit <wpf-source-root>");
-        Console.WriteLine("  migrate <wpf-source-root> <report.md>");
-        Console.WriteLine("  gallery <theme-pack.json> <directory>");
-        Console.WriteLine("  baseline <theme-pack.json> <visual-baseline.json>");
-        Console.WriteLine("  diff <left-theme-pack.json> <right-theme-pack.json>");
-        Console.WriteLine("  scaffold <directory>");
-        Console.WriteLine("  keygen <private.key> <public.key>");
-        Console.WriteLine("  sign <theme-pack.json> [out.json] [private.key]");
-        Console.WriteLine("  verify-signature <theme-pack.json> [public.key]");
-        Console.WriteLine("  adapters");
-        Console.WriteLine("  pack <directory> <out.cskin>");
-        Console.WriteLine("  unpack <in.cskin> <directory>");
-        Console.WriteLine("  lzhc <directory> <out.lzhc>");
-    }
-
-    private static void WriteText(string path, string value)
-    {
-        var directory = Path.GetDirectoryName(path);
-        if (!string.IsNullOrWhiteSpace(directory))
-            Directory.CreateDirectory(directory);
-        File.WriteAllText(path, value);
     }
 
     private static void WriteSecret(string path, string value)
@@ -339,6 +331,14 @@ public static class Program
         {
         }
     }
+
+    private static void WriteText(string path, string value)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+        File.WriteAllText(path, value);
+    }
 }
 
 /// <summary>
@@ -346,7 +346,6 @@ public static class Program
 /// </summary>
 internal static class LzhcArchive
 {
-    private const string Magic = "CSLZHC1";
 
     /// <summary>
     /// Creates a deterministic compressed release archive from every file in a source directory.
@@ -380,6 +379,7 @@ internal static class LzhcArchive
     /// Stores one in-memory release file before it is serialized into the LZHC payload.
     /// </summary>
     private sealed record LzhcEntry(string Path, byte[] Bytes);
+    private const string Magic = "CSLZHC1";
 
     /// <summary>
     /// Stores one base64-encoded archive entry in the JSON manifest inside the compressed payload.

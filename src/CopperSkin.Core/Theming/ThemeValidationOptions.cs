@@ -26,6 +26,11 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ThemeValidationOptions
 {
+
+    /// <summary>
+    /// Gets or sets whether recommended non-critical tokens should be reported when missing.
+    /// </summary>
+    public bool RequireRecommendedTokens { get; set; }
     /// <summary>
     /// Gets or sets whether contrast warnings are promoted to errors.
     /// </summary>
@@ -35,9 +40,4 @@ public sealed class ThemeValidationOptions
     /// Gets or sets whether unknown token keys are reported.
     /// </summary>
     public bool WarnUnknownTokens { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets whether recommended non-critical tokens should be reported when missing.
-    /// </summary>
-    public bool RequireRecommendedTokens { get; set; }
 }

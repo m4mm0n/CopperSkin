@@ -31,11 +31,6 @@ namespace CopperSkin.Wpf;
 /// </summary>
 public sealed class CopperSkinThemeResources : ResourceDictionary
 {
-    private readonly ThemeResolver _resolver = new();
-    private ThemePack? _themePack;
-    private string _theme = "FL Grape";
-    private bool _mergeDefaultControlStyles = true;
-    private bool _includeLegacyAliases = true;
 
     /// <summary>
     /// Creates a design-time friendly CopperSkin dictionary using the built-in theme catalog.
@@ -46,27 +41,14 @@ public sealed class CopperSkinThemeResources : ResourceDictionary
     }
 
     /// <summary>
-    /// Gets or sets the theme pack resolved by this resource dictionary. Built-in themes are used when unset.
+    /// Gets or sets whether legacy amChipper token aliases are emitted for compatibility.
     /// </summary>
-    public ThemePack? ThemePack
+    public bool IncludeLegacyAliases
     {
-        get => _themePack;
+        get => _includeLegacyAliases;
         set
         {
-            _themePack = value;
-            Refresh();
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the theme name or id loaded into this dictionary.
-    /// </summary>
-    public string Theme
-    {
-        get => _theme;
-        set
-        {
-            _theme = string.IsNullOrWhiteSpace(value) ? "FL Grape" : value;
+            _includeLegacyAliases = value;
             Refresh();
         }
     }
@@ -80,19 +62,6 @@ public sealed class CopperSkinThemeResources : ResourceDictionary
         set
         {
             _mergeDefaultControlStyles = value;
-            Refresh();
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets whether legacy amChipper token aliases are emitted for compatibility.
-    /// </summary>
-    public bool IncludeLegacyAliases
-    {
-        get => _includeLegacyAliases;
-        set
-        {
-            _includeLegacyAliases = value;
             Refresh();
         }
     }
@@ -116,4 +85,35 @@ public sealed class CopperSkinThemeResources : ResourceDictionary
         var theme = _resolver.Resolve(pack, Theme);
         CopperSkinResourceEmitter.Apply(this, theme, options);
     }
+
+    /// <summary>
+    /// Gets or sets the theme name or id loaded into this dictionary.
+    /// </summary>
+    public string Theme
+    {
+        get => _theme;
+        set
+        {
+            _theme = string.IsNullOrWhiteSpace(value) ? "FL Grape" : value;
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the theme pack resolved by this resource dictionary. Built-in themes are used when unset.
+    /// </summary>
+    public ThemePack? ThemePack
+    {
+        get => _themePack;
+        set
+        {
+            _themePack = value;
+            Refresh();
+        }
+    }
+    private bool _includeLegacyAliases = true;
+    private bool _mergeDefaultControlStyles = true;
+    private readonly ThemeResolver _resolver = new();
+    private string _theme = "FL Grape";
+    private ThemePack? _themePack;
 }
