@@ -34,13 +34,13 @@ public sealed record AuditFinding(string File, int Line, int Column, string Code
 public static class HardCodedColorAudit
 {
     /// <summary>
-    /// Matches literal hexadecimal colors that should normally flow through theme tokens.
-    /// </summary>
-    private static readonly Regex HexColor = new("#[0-9A-Fa-f]{6,8}", RegexOptions.Compiled);
-    /// <summary>
     /// Matches common WPF code color factories and stock brushes used outside token resources.
     /// </summary>
     private static readonly Regex CodeColor = new("(Color\\.From(?:Argb|Rgb)\\(|Brushes\\.[A-Z][A-Za-z]+)", RegexOptions.Compiled);
+    /// <summary>
+    /// Matches literal hexadecimal colors that should normally flow through theme tokens.
+    /// </summary>
+    private static readonly Regex HexColor = new("#[0-9A-Fa-f]{6,8}", RegexOptions.Compiled);
 
     /// <summary>
     /// Scans every C# and XAML file under a directory and returns hard-coded color findings.
@@ -55,7 +55,7 @@ public static class HardCodedColorAudit
             .ToArray();
 
         var findings = new List<AuditFinding>();
-        foreach (string file in files)
+        foreach (var file in files)
             findings.AddRange(ScanFile(file));
 
         return findings;
@@ -66,21 +66,20 @@ public static class HardCodedColorAudit
     /// </summary>
     public static IReadOnlyList<AuditFinding> ScanFile(string path)
     {
-        string[] lines = File.ReadAllLines(path);
+        var lines = File.ReadAllLines(path);
         if (lines.Any(static line => line.IndexOf("copperskin:allow-hardcoded-color-file", StringComparison.OrdinalIgnoreCase) >= 0))
             return Array.Empty<AuditFinding>();
 
         var findings = new List<AuditFinding>();
-        for (int i = 0; i < lines.Length; i++)
+        for (var i = 0; i < lines.Length; i++)
         {
-            string line = lines[i];
+            var line = lines[i];
             if (line.IndexOf("copperskin:allow-hardcoded-color", StringComparison.OrdinalIgnoreCase) >= 0)
                 continue;
 
-            foreach (Match match in HexColor.Matches(line).Cast<Match>().Concat(CodeColor.Matches(line).Cast<Match>()))
-            {
-                findings.Add(new AuditFinding(path, i + 1, match.Index + 1, "CSKIN001", $"Hard-coded color '{match.Value}' should be mapped to a CopperSkin token."));
-            }
+            findings.AddRange(HexColor.Matches(line).Cast<Match>().Concat(CodeColor.Matches(line).Cast<Match>())
+                .Select(match => new AuditFinding(path, i + 1, match.Index + 1, "CSKIN001",
+                    $"Hard-coded color '{match.Value}' should be mapped to a CopperSkin token.")));
         }
 
         return findings;

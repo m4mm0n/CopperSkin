@@ -25,6 +25,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using CopperSkin.Core.Theming;
+using System.Linq;
 
 namespace CopperSkin.Wpf.Resources;
 
@@ -33,50 +34,6 @@ namespace CopperSkin.Wpf.Resources;
 /// </summary>
 public static class CopperSkinResourceEmitter
 {
-    private const string DefaultStylesMarkerKey = "CopperSkin.Internal.DefaultControlStyles";
-    private static readonly Uri[] DictionarySources =
-    [
-        new("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", UriKind.Relative)
-    ];
-
-    /// <summary>
-    /// Merges the bundled CopperSkin control style dictionaries into a WPF resource dictionary.
-    /// </summary>
-    public static void MergeDefaultDictionaries(ResourceDictionary target)
-    {
-        foreach (var source in DictionarySources)
-        {
-            if (ContainsMergedDictionary(target, source))
-                continue;
-
-            target.MergedDictionaries.Add(LoadDictionary(source));
-        }
-    }
-
-    private static ResourceDictionary LoadDictionary(Uri source)
-    {
-        var dictionary = (ResourceDictionary)Application.LoadComponent(source);
-        dictionary[DefaultStylesMarkerKey] = true;
-        return dictionary;
-    }
-
-    private static bool ContainsMergedDictionary(ResourceDictionary dictionary, Uri source)
-    {
-        foreach (var merged in dictionary.MergedDictionaries)
-        {
-            if (IsDefaultStylesDictionary(merged, source) || ContainsMergedDictionary(merged, source))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsDefaultStylesDictionary(ResourceDictionary dictionary, Uri source)
-    {
-        return dictionary.Contains(DefaultStylesMarkerKey)
-            || dictionary.Source == source
-            || dictionary.Source?.OriginalString.Contains(source.OriginalString, StringComparison.OrdinalIgnoreCase) == true;
-    }
 
     /// <summary>
     /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
@@ -132,10 +89,56 @@ public static class CopperSkinResourceEmitter
         SetMetricAliases(target, theme);
     }
 
+    private static bool ContainsMergedDictionary(ResourceDictionary dictionary, Uri source)
+    {
+        return dictionary.MergedDictionaries.Any(merged => IsDefaultStylesDictionary(merged, source) || ContainsMergedDictionary(merged, source));
+    }
+    private const string DefaultStylesMarkerKey = "CopperSkin.Internal.DefaultControlStyles";
+    private static readonly Uri[] DictionarySources =
+    [
+        new("/CopperSkin.Wpf;component/Themes/CopperSkin.Controls.xaml", UriKind.Relative)
+    ];
+
     /// <summary>
-    /// Converts a CopperSkin color token value into a WPF color.
+    /// Determines whether a token value looks like a supported ARGB or RGB hex color.
     /// </summary>
-    public static Color ToColor(string value) => (Color)ColorConverter.ConvertFromString(value);
+    private static bool IsColor(string value) => value.StartsWith("#", StringComparison.Ordinal) && (value.Length == 7 || value.Length == 9);
+
+    private static bool IsDefaultStylesDictionary(ResourceDictionary dictionary, Uri source)
+    {
+        return dictionary.Contains(DefaultStylesMarkerKey)
+            || dictionary.Source == source
+            || dictionary.Source?.OriginalString.Contains(source.OriginalString, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static ResourceDictionary LoadDictionary(Uri source)
+    {
+        var dictionary = (ResourceDictionary)Application.LoadComponent(source);
+        dictionary[DefaultStylesMarkerKey] = true;
+        return dictionary;
+    }
+
+    /// <summary>
+    /// Merges the bundled CopperSkin control style dictionaries into a WPF resource dictionary.
+    /// </summary>
+    public static void MergeDefaultDictionaries(ResourceDictionary target)
+    {
+        foreach (var source in DictionarySources)
+        {
+            if (ContainsMergedDictionary(target, source))
+                continue;
+
+            target.MergedDictionaries.Add(LoadDictionary(source));
+        }
+    }
+
+    /// <summary>
+    /// Reads a numeric token using invariant culture and falls back when the token is missing or invalid.
+    /// </summary>
+    private static double ReadDouble(string value, double fallback) =>
+        double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var result)
+            ? result
+            : fallback;
 
     /// <summary>
     /// Writes both brush and color resources for a token, including legacy color aliases when needed.
@@ -149,24 +152,18 @@ public static class CopperSkinResourceEmitter
             target[$"{key}Color"] = color;
     }
 
-    private static void SetTypedValue(ResourceDictionary target, string key, string value)
-    {
-        target[key] = value;
-        if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var number))
-        {
-            target[$"{key}.double"] = number;
-            if (key.StartsWith("spacing.", StringComparison.OrdinalIgnoreCase))
-                target[$"{key}.thickness"] = new Thickness(number);
-            if (key.StartsWith("metric.radius.", StringComparison.OrdinalIgnoreCase))
-                target[$"{key}.cornerRadius"] = new CornerRadius(number);
-            if (key.EndsWith(".ms", StringComparison.OrdinalIgnoreCase))
-                target[$"{key}.duration"] = new Duration(TimeSpan.FromMilliseconds(number));
-        }
-        else if (key.StartsWith("font.", StringComparison.OrdinalIgnoreCase))
-        {
-            target[$"{key}.fontFamily"] = new FontFamily(value);
-        }
-    }
+    /// <summary>
+    /// Builds a three-stop themed gradient resource from resolved CopperSkin color tokens.
+    /// </summary>
+    private static void SetGradient(ResourceDictionary target, string key, string first, string second, string third, bool vertical) =>
+        target[key] = new LinearGradientBrush(
+            [
+                new(ToColor(first), 0),
+                new(ToColor(second), 0.54),
+                new(ToColor(third), 1)
+            ],
+            new Point(0, 0),
+            vertical ? new Point(0, 1) : new Point(1, 1));
 
     private static void SetMetricAliases(ResourceDictionary target, ResolvedTheme theme)
     {
@@ -185,29 +182,25 @@ public static class CopperSkinResourceEmitter
         target["CopperSkin.Motion.Transition"] = new Duration(TimeSpan.FromMilliseconds(ReadDouble(theme.Get("motion.transition.ms", "120"), 120)));
     }
 
-    /// <summary>
-    /// Builds a three-stop themed gradient resource from resolved CopperSkin color tokens.
-    /// </summary>
-    private static void SetGradient(ResourceDictionary target, string key, string first, string second, string third, bool vertical) =>
-        target[key] = new LinearGradientBrush(
-            [
-                new(ToColor(first), 0),
-                new(ToColor(second), 0.54),
-                new(ToColor(third), 1)
-            ],
-            new Point(0, 0),
-            vertical ? new Point(0, 1) : new Point(1, 1));
+    private static void SetTypedValue(ResourceDictionary target, string key, string value)
+    {
+        target[key] = value;
+        if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var number))
+        {
+            target[$"{key}.double"] = number;
+            if (key.StartsWith("spacing.", StringComparison.OrdinalIgnoreCase))
+                target[$"{key}.thickness"] = new Thickness(number);
+            if (key.StartsWith("metric.radius.", StringComparison.OrdinalIgnoreCase))
+                target[$"{key}.cornerRadius"] = new CornerRadius(number);
+            if (key.EndsWith(".ms", StringComparison.OrdinalIgnoreCase))
+                target[$"{key}.duration"] = new Duration(TimeSpan.FromMilliseconds(number));
+        }
+        else if (key.StartsWith("font.", StringComparison.OrdinalIgnoreCase))
+            target[$"{key}.fontFamily"] = new FontFamily(value);
+    }
 
     /// <summary>
-    /// Determines whether a token value looks like a supported ARGB or RGB hex color.
+    /// Converts a CopperSkin color token value into a WPF color.
     /// </summary>
-    private static bool IsColor(string value) => value.StartsWith("#", StringComparison.Ordinal) && (value.Length == 7 || value.Length == 9);
-
-    /// <summary>
-    /// Reads a numeric token using invariant culture and falls back when the token is missing or invalid.
-    /// </summary>
-    private static double ReadDouble(string value, double fallback) =>
-        double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var result)
-            ? result
-            : fallback;
+    public static Color ToColor(string value) => (Color)ColorConverter.ConvertFromString(value);
 }

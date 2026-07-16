@@ -51,9 +51,31 @@ public partial class MainWindow : CopperWindow
     }
 
     /// <summary>
+    /// Opens the CopperSkin-owned MessageBox replacement from the sample dialog panel.
+    /// </summary>
+    private void MessageBox_Click(object sender, RoutedEventArgs e)
+    {
+        CopperMessageBox.Show(this, "CopperSkin owns this MessageBox-style dialog, including button styling and window chrome.", "CopperSkin MessageBox");
+    }
+
+    /// <summary>
     /// Gets the control rows displayed in the sample DataGrid.
     /// </summary>
     public IReadOnlyList<ControlRow> Rows { get; }
+
+    /// <summary>
+    /// Opens the CopperSkin-owned TaskDialog-style surface from the sample dialog panel.
+    /// </summary>
+    private void TaskDialog_Click(object sender, RoutedEventArgs e)
+    {
+        new CopperTaskDialog
+        {
+            Title = "CopperSkin TaskDialog",
+            Heading = "Full theme control",
+            Text = "TaskDialog-style flows use the same live resources as the rest of the engine.",
+            ShowSecondaryButton = true
+        }.Show(this);
+    }
 
     /// <summary>
     /// Applies the selected theme from the header combo box and mirrors it into the status bar.
@@ -75,28 +97,6 @@ public partial class MainWindow : CopperWindow
     {
         if (sender is System.Windows.Controls.MenuItem { Header: string theme })
             ThemeCombo.SelectedItem = theme;
-    }
-
-    /// <summary>
-    /// Opens the CopperSkin-owned MessageBox replacement from the sample dialog panel.
-    /// </summary>
-    private void MessageBox_Click(object sender, RoutedEventArgs e)
-    {
-        CopperMessageBox.Show(this, "CopperSkin owns this MessageBox-style dialog, including button styling and window chrome.", "CopperSkin MessageBox");
-    }
-
-    /// <summary>
-    /// Opens the CopperSkin-owned TaskDialog-style surface from the sample dialog panel.
-    /// </summary>
-    private void TaskDialog_Click(object sender, RoutedEventArgs e)
-    {
-        new CopperTaskDialog
-        {
-            Title = "CopperSkin TaskDialog",
-            Heading = "Full theme control",
-            Text = "TaskDialog-style flows use the same live resources as the rest of the engine.",
-            ShowSecondaryButton = true
-        }.Show(this);
     }
 }
 

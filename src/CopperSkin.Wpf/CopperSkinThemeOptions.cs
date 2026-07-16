@@ -43,10 +43,11 @@ public enum CopperSkinBackdropKind
 /// </summary>
 public sealed class CopperSkinThemeOptions
 {
+
     /// <summary>
-    /// Gets or sets whether legacy amChipper token aliases are emitted for compatibility.
+    /// Gets or sets whether CopperWindow adds an About command to its themed window context menu.
     /// </summary>
-    public bool IncludeLegacyAliases { get; set; } = true;
+    public bool AddAboutToWindowContextMenu { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether supported native title-bar chrome is tinted from the active theme.
@@ -59,22 +60,21 @@ public sealed class CopperSkinThemeOptions
     public CopperSkinBackdropKind BackdropKind { get; set; } = CopperSkinBackdropKind.Auto;
 
     /// <summary>
-    /// Gets or sets whether the bundled CopperSkin standard-control templates are merged.
+    /// Gets or sets the initial theme applied when CopperSkin is installed.
     /// </summary>
-    public bool MergeDefaultControlStyles { get; set; } = true;
+    public string DefaultThemeName { get; set; } = "FL Grape";
 
     /// <summary>
     /// Gets or sets whether CopperWindow installs themed client-area and title-bar window context menus.
     /// </summary>
     public bool EnableWindowContextMenu { get; set; } = true;
+    /// <summary>
+    /// Gets or sets whether legacy amChipper token aliases are emitted for compatibility.
+    /// </summary>
+    public bool IncludeLegacyAliases { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether CopperWindow adds an About command to its themed window context menu.
+    /// Gets or sets whether the bundled CopperSkin standard-control templates are merged.
     /// </summary>
-    public bool AddAboutToWindowContextMenu { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets the initial theme applied when CopperSkin is installed.
-    /// </summary>
-    public string DefaultThemeName { get; set; } = "FL Grape";
+    public bool MergeDefaultControlStyles { get; set; } = true;
 }

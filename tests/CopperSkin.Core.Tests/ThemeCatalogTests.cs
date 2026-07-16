@@ -30,6 +30,23 @@ namespace CopperSkin.Core.Tests;
 /// </summary>
 public sealed class ThemeCatalogTests
 {
+
+    /// <summary>
+    /// Verifies the Audit Finds Hard Coded Colors behavior.
+    /// </summary>
+    [Fact]
+    public void AuditFindsHardCodedColors()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperskin-audit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "View.xaml");
+        File.WriteAllText(file, "<Grid Background=\"#FF000000\"/>");
+
+        var findings = HardCodedColorAudit.ScanDirectory(root);
+
+        Assert.Single(findings);
+        Assert.Equal("CSKIN001", findings[0].Code);
+    }
     /// <summary>
     /// Verifies the Built In Catalog Contains All Am Chipper Themes behavior.
     /// </summary>
@@ -42,6 +59,19 @@ public sealed class ThemeCatalogTests
         Assert.Contains(pack.Themes, theme => theme.Name == "FL Grape");
         Assert.Contains(pack.Themes, theme => theme.Name == "Copper Desk");
         Assert.Contains(pack.Themes, theme => theme.Name == "Deep Red");
+    }
+
+    /// <summary>
+    /// Verifies the Resolver Adds Rich Derived Tokens behavior.
+    /// </summary>
+    [Fact]
+    public void ResolverAddsRichDerivedTokens()
+    {
+        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "FL Grape");
+
+        Assert.Equal("8", theme.Get("spacing.md"));
+        Assert.Equal(theme.Get("color.accent.primary"), theme.Get("color.action.default"));
+        Assert.Equal("Segoe UI", theme.Get("font.ui"));
     }
 
     /// <summary>
@@ -58,14 +88,39 @@ public sealed class ThemeCatalogTests
     }
 
     /// <summary>
-    /// Verifies the Validator Accepts Built Ins behavior.
+    /// Verifies the Theme Pack Signer Round Trips behavior.
     /// </summary>
     [Fact]
-    public void ValidatorAcceptsBuiltIns()
+    public void ThemePackSignerRoundTrips()
     {
-        var diagnostics = new ThemeValidator().Validate(BuiltInThemeCatalog.Create());
+        var pack = BuiltInThemeCatalog.Create();
+        var keyPair = ThemePackSigner.CreateKeyPair();
 
-        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == "Error");
+        var signature = ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
+
+        Assert.False(string.IsNullOrWhiteSpace(signature));
+        Assert.True(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
+        Assert.Equal("ECDSA-GF2M-B233-SHA256", pack.Metadata[ThemePackSigner.AlgorithmKey]);
+        Assert.StartsWith("04", pack.Metadata[ThemePackSigner.PublicKeyKey], StringComparison.Ordinal);
+        pack.Metadata["signature.signer"] = "other";
+        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
+        var otherKeyPair = ThemePackSigner.CreateKeyPair();
+        ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
+        Assert.False(ThemePackSigner.Verify(pack, otherKeyPair.PublicKeyHex));
+        pack.Themes[0].Tokens["color.accent.primary"] = "#FFFFFFFF";
+        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
+    }
+
+    /// <summary>
+    /// Verifies key generation derives a real B-233 public point instead of an all-zero placeholder.
+    /// </summary>
+    [Fact]
+    public void ThemePackSignerCreatesNonZeroPublicKey()
+    {
+        var keyPair = ThemePackSigner.CreateKeyPair();
+
+        Assert.StartsWith("04", keyPair.PublicKeyHex, StringComparison.Ordinal);
+        Assert.Contains(keyPair.PublicKeyHex[2..], character => character != '0');
     }
 
     /// <summary>
@@ -80,16 +135,14 @@ public sealed class ThemeCatalogTests
     }
 
     /// <summary>
-    /// Verifies the Resolver Adds Rich Derived Tokens behavior.
+    /// Verifies the Validator Accepts Built Ins behavior.
     /// </summary>
     [Fact]
-    public void ResolverAddsRichDerivedTokens()
+    public void ValidatorAcceptsBuiltIns()
     {
-        var theme = new ThemeResolver().Resolve(BuiltInThemeCatalog.Create(), "FL Grape");
+        var diagnostics = new ThemeValidator().Validate(BuiltInThemeCatalog.Create());
 
-        Assert.Equal("8", theme.Get("spacing.md"));
-        Assert.Equal(theme.Get("color.accent.primary"), theme.Get("color.action.default"));
-        Assert.Equal("Segoe UI", theme.Get("font.ui"));
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == "Error");
     }
 
     /// <summary>
@@ -109,46 +162,5 @@ public sealed class ThemeCatalogTests
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "TOKEN005");
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "TOKEN003");
-    }
-
-    /// <summary>
-    /// Verifies the Theme Pack Signer Round Trips behavior.
-    /// </summary>
-    [Fact]
-    public void ThemePackSignerRoundTrips()
-    {
-        var pack = BuiltInThemeCatalog.Create();
-        ThemePackSigningKeyPair keyPair = ThemePackSigner.CreateKeyPair();
-
-        var signature = ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
-
-        Assert.False(string.IsNullOrWhiteSpace(signature));
-        Assert.True(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
-        Assert.Equal("ECDSA-GF2M-B233-SHA256", pack.Metadata[ThemePackSigner.AlgorithmKey]);
-        Assert.StartsWith("04", pack.Metadata[ThemePackSigner.PublicKeyKey], StringComparison.Ordinal);
-        pack.Metadata["signature.signer"] = "other";
-        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
-        ThemePackSigningKeyPair otherKeyPair = ThemePackSigner.CreateKeyPair();
-        ThemePackSigner.Sign(pack, "test", keyPair.PrivateKeyHex);
-        Assert.False(ThemePackSigner.Verify(pack, otherKeyPair.PublicKeyHex));
-        pack.Themes[0].Tokens["color.accent.primary"] = "#FFFFFFFF";
-        Assert.False(ThemePackSigner.Verify(pack, keyPair.PublicKeyHex));
-    }
-
-    /// <summary>
-    /// Verifies the Audit Finds Hard Coded Colors behavior.
-    /// </summary>
-    [Fact]
-    public void AuditFindsHardCodedColors()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "copperskin-audit-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        var file = Path.Combine(root, "View.xaml");
-        File.WriteAllText(file, "<Grid Background=\"#FF000000\"/>");
-
-        var findings = HardCodedColorAudit.ScanDirectory(root);
-
-        Assert.Single(findings);
-        Assert.Equal("CSKIN001", findings[0].Code);
     }
 }

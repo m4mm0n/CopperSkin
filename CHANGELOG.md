@@ -14,6 +14,9 @@
 
 - Changed theme-pack signing metadata from hash-only `signature.sha256` to `signature.eccgf2.*` B-233 ECDSA metadata.
 - Updated CLI signing commands to support `keygen`, private-key-backed signing, and optional trusted public-key verification.
+- Corrected horizontal scrollbar track direction so thumb movement and left/right commands agree.
+- Fixed Designer collection updates to use supported `ObservableCollection` operations.
+- Fixed static initialization ordering for the token catalog and B-233 base point; release signing no longer produces an all-zero public key or loops on zero signature coordinates.
 
 ## v0.2.0.0 - 2026-06-04
 

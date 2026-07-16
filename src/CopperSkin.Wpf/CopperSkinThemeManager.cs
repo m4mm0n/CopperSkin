@@ -25,6 +25,7 @@ using CopperSkin.Wpf.Chrome;
 using CopperSkin.Wpf.Controls;
 using CopperSkin.Wpf.Drawing;
 using CopperSkin.Wpf.Resources;
+using System.Linq;
 
 namespace CopperSkin.Wpf;
 
@@ -33,67 +34,11 @@ namespace CopperSkin.Wpf;
 /// </summary>
 public sealed class CopperSkinThemeManager
 {
-    private readonly Application _application;
-    private readonly ThemePack _pack;
-    /// <summary>
-    /// Resolves themes from the active pack into runtime-ready token sets.
-    /// </summary>
-    private readonly ThemeResolver _resolver = new();
-    private readonly CopperSkinThemeOptions _options;
-    /// <summary>
-    /// Applies CopperSkin colors to supported native DWM window chrome.
-    /// </summary>
-    private readonly WpfWindowChromeService _chromeService = new();
-
-    /// <summary>
-    /// Creates a manager bound to one WPF application and merges the default style dictionaries when requested.
-    /// </summary>
-    private CopperSkinThemeManager(Application application, ThemePack pack, CopperSkinThemeOptions? options)
-    {
-        _application = application;
-        _pack = pack;
-        _options = options ?? new CopperSkinThemeOptions();
-        if (_options.MergeDefaultControlStyles)
-            CopperSkinResourceEmitter.MergeDefaultDictionaries(_application.Resources);
-    }
-
-    /// <summary>
-    /// Gets the application-wide CopperSkin theme manager currently installed.
-    /// </summary>
-    public static CopperSkinThemeManager? Current { get; private set; }
-
-    /// <summary>
-    /// Gets the theme pack owned by this manager.
-    /// </summary>
-    public ThemePack ThemePack => _pack;
 
     /// <summary>
     /// Gets the resolved theme currently applied to application resources.
     /// </summary>
     public ResolvedTheme? ActiveTheme { get; private set; }
-
-    /// <summary>
-    /// Raised after application resources, drawing surfaces, and attached windows receive a new theme.
-    /// </summary>
-    public event EventHandler<CopperSkinThemeChangedEventArgs>? ThemeChanged;
-
-    /// <summary>
-    /// Installs CopperSkin into a WPF application and applies the initial built-in theme.
-    /// </summary>
-    public static CopperSkinThemeManager Install(Application application, ThemePack? pack = null, CopperSkinThemeOptions? options = null)
-    {
-        if (application is null)
-            throw new ArgumentNullException(nameof(application));
-
-        Current = new CopperSkinThemeManager(application, pack ?? BuiltInThemeCatalog.Create(), options);
-        Current.Apply(Current._options.DefaultThemeName);
-        return Current;
-    }
-
-    /// <summary>
-    /// Gets the display names of every theme available in the active theme pack.
-    /// </summary>
-    public IReadOnlyList<string> ThemeNames => _pack.Themes.Select(static t => t.Name).ToArray();
 
     /// <summary>
     /// Applies the requested CopperSkin theme, resource set, chrome color, or drawing snapshot.
@@ -108,6 +53,44 @@ public sealed class CopperSkinThemeManager
             ApplyWindowChrome(window);
         ThemeChanged?.Invoke(this, new CopperSkinThemeChangedEventArgs(theme));
         return theme;
+    }
+
+    /// <summary>
+    /// Applies a persistent scoped theme to an element resource dictionary.
+    /// </summary>
+    public ResolvedTheme ApplyTo(FrameworkElement target, string idOrName)
+    {
+        if (target is null)
+            throw new ArgumentNullException(nameof(target));
+
+        var theme = _resolver.Resolve(_pack, idOrName);
+        CopperSkinResourceEmitter.Apply(target.Resources, theme, _options);
+        return theme;
+    }
+
+    /// <summary>
+    /// Pushes the active theme into native window chrome when that integration is enabled.
+    /// </summary>
+    private void ApplyWindowChrome(Window window)
+    {
+        if (_options.ApplyNativeWindowChrome && ActiveTheme is not null)
+            _chromeService.Apply(window, ActiveTheme, _options);
+    }
+
+    /// <summary>
+    /// Attaches native chrome refresh hooks to a window.
+    /// </summary>
+    public void AttachWindow(Window window)
+    {
+        if (window is null)
+            throw new ArgumentNullException(nameof(window));
+
+        window.SourceInitialized += (_, _) => ApplyWindowChrome(window);
+        window.Activated += (_, _) => ApplyWindowChrome(window);
+        if (window is CopperWindow copperWindow)
+            copperWindow.ApplyThemeOptions(_options);
+        if (ActiveTheme is not null)
+            ApplyWindowChrome(window);
     }
 
     /// <summary>
@@ -134,41 +117,33 @@ public sealed class CopperSkinThemeManager
     }
 
     /// <summary>
-    /// Applies a persistent scoped theme to an element resource dictionary.
+    /// Creates a manager bound to one WPF application and merges the default style dictionaries when requested.
     /// </summary>
-    public ResolvedTheme ApplyTo(FrameworkElement target, string idOrName)
+    private CopperSkinThemeManager(Application application, ThemePack pack, CopperSkinThemeOptions? options)
     {
-        if (target is null)
-            throw new ArgumentNullException(nameof(target));
-
-        var theme = _resolver.Resolve(_pack, idOrName);
-        CopperSkinResourceEmitter.Apply(target.Resources, theme, _options);
-        return theme;
+        _application = application;
+        _pack = pack;
+        _options = options ?? new CopperSkinThemeOptions();
+        if (_options.MergeDefaultControlStyles)
+            CopperSkinResourceEmitter.MergeDefaultDictionaries(_application.Resources);
     }
 
     /// <summary>
-    /// Attaches native chrome refresh hooks to a window.
+    /// Gets the application-wide CopperSkin theme manager currently installed.
     /// </summary>
-    public void AttachWindow(Window window)
-    {
-        if (window is null)
-            throw new ArgumentNullException(nameof(window));
-
-        window.SourceInitialized += (_, _) => ApplyWindowChrome(window);
-        window.Activated += (_, _) => ApplyWindowChrome(window);
-        if (window is CopperWindow copperWindow)
-            copperWindow.ApplyThemeOptions(_options);
-        if (ActiveTheme is not null)
-            ApplyWindowChrome(window);
-    }
+    public static CopperSkinThemeManager? Current { get; private set; }
 
     /// <summary>
-    /// Pushes the active theme into native window chrome when that integration is enabled.
+    /// Installs CopperSkin into a WPF application and applies the initial built-in theme.
     /// </summary>
-    private void ApplyWindowChrome(Window window)
+    public static CopperSkinThemeManager Install(Application application, ThemePack? pack = null, CopperSkinThemeOptions? options = null)
     {
-        if (_options.ApplyNativeWindowChrome && ActiveTheme is not null)
-            _chromeService.Apply(window, ActiveTheme, _options);
+        if (application is null)
+            throw new ArgumentNullException(nameof(application));
+
+        Current = new CopperSkinThemeManager(application, pack ?? BuiltInThemeCatalog.Create(), options);
+        Current.Apply(Current._options.DefaultThemeName);
+        return Current;
     }
 
     /// <summary>
@@ -176,18 +151,6 @@ public sealed class CopperSkinThemeManager
     /// </summary>
     private sealed class PreviewScope : IDisposable
     {
-        private readonly FrameworkElement _target;
-        private readonly ResourceSnapshot _previous;
-        private bool _disposed;
-
-        /// <summary>
-        /// Captures the target element and its previous resources for later restoration.
-        /// </summary>
-        public PreviewScope(FrameworkElement target, ResourceSnapshot previous)
-        {
-            _target = target;
-            _previous = previous;
-        }
 
         /// <summary>
         /// Releases the scope and restores or closes the owned WPF resource.
@@ -200,19 +163,22 @@ public sealed class CopperSkinThemeManager
             _previous.Restore(_target.Resources);
             _disposed = true;
         }
+
+        /// <summary>
+        /// Captures the target element and its previous resources for later restoration.
+        /// </summary>
+        public PreviewScope(FrameworkElement target, ResourceSnapshot previous)
+        {
+            _target = target;
+            _previous = previous;
+        }
+        private bool _disposed;
+        private readonly ResourceSnapshot _previous;
+        private readonly FrameworkElement _target;
     }
 
     internal sealed class ResourceSnapshot
     {
-        private ResourceSnapshot(IReadOnlyDictionary<object, object> entries, IReadOnlyList<ResourceDictionary> mergedDictionaries)
-        {
-            Entries = entries;
-            MergedDictionaries = mergedDictionaries;
-        }
-
-        public IReadOnlyDictionary<object, object> Entries { get; }
-
-        public IReadOnlyList<ResourceDictionary> MergedDictionaries { get; }
 
         public static ResourceSnapshot Capture(ResourceDictionary resources)
         {
@@ -223,14 +189,49 @@ public sealed class CopperSkinThemeManager
             return new ResourceSnapshot(entries, mergedDictionaries);
         }
 
+        public IReadOnlyDictionary<object, object> Entries { get; }
+
+        public IReadOnlyList<ResourceDictionary> MergedDictionaries { get; }
+        private ResourceSnapshot(IReadOnlyDictionary<object, object> entries, IReadOnlyList<ResourceDictionary> mergedDictionaries)
+        {
+            Entries = entries;
+            MergedDictionaries = mergedDictionaries;
+        }
+
         public void Restore(ResourceDictionary resources)
         {
             resources.Clear();
             resources.MergedDictionaries.Clear();
-            foreach (ResourceDictionary dictionary in MergedDictionaries)
+            foreach (var dictionary in MergedDictionaries)
                 resources.MergedDictionaries.Add(dictionary);
-            foreach (KeyValuePair<object, object> pair in Entries)
+            foreach (var pair in Entries)
                 resources[pair.Key] = pair.Value;
         }
     }
+
+    /// <summary>
+    /// Raised after application resources, drawing surfaces, and attached windows receive a new theme.
+    /// </summary>
+    public event EventHandler<CopperSkinThemeChangedEventArgs>? ThemeChanged;
+
+    /// <summary>
+    /// Gets the display names of every theme available in the active theme pack.
+    /// </summary>
+    public IReadOnlyList<string> ThemeNames => _pack.Themes.Select(static t => t.Name).ToArray();
+
+    /// <summary>
+    /// Gets the theme pack owned by this manager.
+    /// </summary>
+    public ThemePack ThemePack => _pack;
+    private readonly Application _application;
+    /// <summary>
+    /// Applies CopperSkin colors to supported native DWM window chrome.
+    /// </summary>
+    private readonly WpfWindowChromeService _chromeService = new();
+    private readonly CopperSkinThemeOptions _options;
+    private readonly ThemePack _pack;
+    /// <summary>
+    /// Resolves themes from the active pack into runtime-ready token sets.
+    /// </summary>
+    private readonly ThemeResolver _resolver = new();
 }

@@ -40,7 +40,7 @@ public static class CopperMessageBox
         var dialog = new CopperDialogWindow(title, message, buttons);
         if (owner is not null)
             dialog.Owner = owner;
-        bool? result = dialog.ShowDialog();
+        var result = dialog.ShowDialog();
         return result == true ? dialog.Result : MessageBoxResult.Cancel;
     }
 }

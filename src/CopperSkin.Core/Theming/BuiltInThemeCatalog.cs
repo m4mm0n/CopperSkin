@@ -1,3 +1,4 @@
+using System.Linq;
 /*
  * ====================================================================================================
  *  Project        : CopperSkin
@@ -45,16 +46,10 @@ public static class BuiltInThemeCatalog
             }
         };
 
-        foreach (var palette in Palettes)
-            pack.Themes.Add(CreateTheme(palette.Name, palette.Values));
+        pack.Themes.AddRange(Palettes.Select(palette => CreateTheme(palette.Name, palette.Values)));
 
         return pack;
     }
-
-    /// <summary>
-    /// Gets the display names of all bundled CopperSkin themes.
-    /// </summary>
-    public static IReadOnlyList<string> ThemeNames => Palettes.Select(static p => p.Name).ToArray();
 
     /// <summary>
     /// Converts one palette into a tokenized theme definition with metadata.
@@ -136,6 +131,27 @@ public static class BuiltInThemeCatalog
     }
 
     /// <summary>
+    /// Creates a compact palette entry from the fixed built-in color slots.
+    /// </summary>
+    private static Palette P(string name, string deep, string panel, string control, string hover, string selected, string accent, string accentLight, string border, string textPrimary, string textSecondary, string textDisabled)
+    {
+        return new Palette(name, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["BgDeep"] = deep,
+            ["BgPanel"] = panel,
+            ["BgControl"] = control,
+            ["BgHover"] = hover,
+            ["BgSelect"] = selected,
+            ["Accent"] = accent,
+            ["AccentLight"] = accentLight,
+            ["Border"] = border,
+            ["TextPrimary"] = textPrimary,
+            ["TextSecondary"] = textSecondary,
+            ["TextDisabled"] = textDisabled
+        });
+    }
+
+    /// <summary>
     /// Stores one named built-in palette and its raw color token values.
     /// </summary>
     private sealed record Palette(string Name, IReadOnlyDictionary<string, string> Values);
@@ -169,23 +185,7 @@ public static class BuiltInThemeCatalog
     ];
 
     /// <summary>
-    /// Creates a compact palette entry from the fixed built-in color slots.
+    /// Gets the display names of all bundled CopperSkin themes.
     /// </summary>
-    private static Palette P(string name, string deep, string panel, string control, string hover, string selected, string accent, string accentLight, string border, string textPrimary, string textSecondary, string textDisabled)
-    {
-        return new Palette(name, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["BgDeep"] = deep,
-            ["BgPanel"] = panel,
-            ["BgControl"] = control,
-            ["BgHover"] = hover,
-            ["BgSelect"] = selected,
-            ["Accent"] = accent,
-            ["AccentLight"] = accentLight,
-            ["Border"] = border,
-            ["TextPrimary"] = textPrimary,
-            ["TextSecondary"] = textSecondary,
-            ["TextDisabled"] = textDisabled
-        });
-    }
+    public static IReadOnlyList<string> ThemeNames => Palettes.Select(static p => p.Name).ToArray();
 }

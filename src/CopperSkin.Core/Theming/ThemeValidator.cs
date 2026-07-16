@@ -28,6 +28,97 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ThemeValidator
 {
+
+    /// <summary>
+    /// Adds WCAG-style contrast diagnostics for primary and secondary text tokens.
+    /// </summary>
+    private static void AddContrastDiagnostics(ResolvedTheme theme, List<ThemeDiagnostic> diagnostics, string path, bool strict)
+    {
+        if (!TryParseColor(theme.Get("color.surface.panel"), out var panel) ||
+            !TryParseColor(theme.Get("color.text.primary"), out var primary) ||
+            !TryParseColor(theme.Get("color.text.secondary"), out var secondary))
+            return;
+
+        var primaryRatio = Contrast(panel, primary);
+        var secondaryRatio = Contrast(panel, secondary);
+        var severity = strict ? "Error" : "Warning";
+
+        if (primaryRatio < 4.5)
+            diagnostics.Add(new ThemeDiagnostic(severity, "A11Y001", $"Primary text contrast is {primaryRatio:0.00}:1; expected at least 4.5:1.", $"{path}/contrast/primary"));
+
+        if (secondaryRatio < 3.0)
+            diagnostics.Add(new ThemeDiagnostic(severity, "A11Y002", $"Secondary text contrast is {secondaryRatio:0.00}:1; expected at least 3.0:1.", $"{path}/contrast/secondary"));
+
+        if (TryParseColor(theme.Get("color.text.disabled"), out var disabled))
+        {
+            var disabledRatio = Contrast(panel, disabled);
+            if (disabledRatio < 1.8)
+                diagnostics.Add(new ThemeDiagnostic(severity, "A11Y003", $"Disabled text contrast is {disabledRatio:0.00}:1; expected at least 1.8:1.", $"{path}/contrast/disabled"));
+        }
+
+        if (TryParseColor(theme.Get("color.status.danger"), out var danger))
+        {
+            var dangerRatio = Contrast(panel, danger);
+            if (dangerRatio < 3.0)
+                diagnostics.Add(new ThemeDiagnostic(severity, "A11Y004", $"Danger status contrast is {dangerRatio:0.00}:1; expected at least 3.0:1.", $"{path}/contrast/danger"));
+        }
+    }
+
+    /// <summary>
+    /// Calculates the contrast ratio between two RGBA colors.
+    /// </summary>
+    private static double Contrast(RgbaColor a, RgbaColor b)
+    {
+        var l1 = Luminance(a) + 0.05;
+        var l2 = Luminance(b) + 0.05;
+        return Math.Max(l1, l2) / Math.Min(l1, l2);
+    }
+
+    /// <summary>
+    /// Determines whether a token key should contain a parseable color value.
+    /// </summary>
+    private static bool LooksColorToken(string key) =>
+        key.StartsWith("color.", StringComparison.OrdinalIgnoreCase) ||
+        LegacyTokenAliases.Map.ContainsKey(key) ||
+        key.EndsWith("Color", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Calculates relative luminance for one RGBA color using sRGB channel conversion.
+    /// </summary>
+    private static double Luminance(RgbaColor color)
+    {
+        static double Channel(byte value)
+        {
+            var s = value / 255.0;
+            return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
+        }
+
+        return (0.2126 * Channel(color.R)) + (0.7152 * Channel(color.G)) + (0.0722 * Channel(color.B));
+    }
+
+    /// <summary>
+    /// Parses a #RRGGBB or #AARRGGBB token value into RGBA channels.
+    /// </summary>
+    public static bool TryParseColor(string value, out RgbaColor color)
+    {
+        color = default;
+        if (string.IsNullOrWhiteSpace(value) || value[0] != '#')
+            return false;
+
+        var hex = value.Substring(1);
+        if (hex.Length != 6 && hex.Length != 8)
+            return false;
+
+        if (!uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var raw))
+            return false;
+
+        if (hex.Length == 6)
+            color = new RgbaColor(255, (byte)(raw >> 16), (byte)(raw >> 8), (byte)raw);
+        else
+            color = new RgbaColor((byte)(raw >> 24), (byte)(raw >> 16), (byte)(raw >> 8), (byte)raw);
+
+        return true;
+    }
     /// <summary>
     /// Validates a theme pack and returns all diagnostics without mutating the pack.
     /// </summary>
@@ -65,7 +156,7 @@ public sealed class ThemeValidator
             if (!string.IsNullOrWhiteSpace(theme.BaseThemeId) && string.Equals(theme.BaseThemeId, theme.Id, StringComparison.OrdinalIgnoreCase))
                 diagnostics.Add(new ThemeDiagnostic("Error", "THEME005", $"Theme '{theme.Id}' cannot inherit from itself.", $"{path}/baseThemeId"));
 
-            foreach (KeyValuePair<string, string> pair in theme.Tokens)
+            foreach (var pair in theme.Tokens)
                 ValidateToken(pair.Key, pair.Value, diagnostics, $"{path}/tokens/{pair.Key}", options);
 
             ResolvedTheme resolved;
@@ -85,12 +176,10 @@ public sealed class ThemeValidator
                     $"{path}/tokens/{token}"));
 
             if (options.RequireRecommendedTokens)
-            {
                 diagnostics.AddRange(from token in ThemeTokenCatalog.All.Where(static d => d.Recommended).Select(static d => d.Key)
-                    where !resolved.Tokens.ContainsKey(token)
-                    select new ThemeDiagnostic("Warning", "TOKEN004", $"Recommended token '{token}' is missing.",
-                        $"{path}/tokens/{token}"));
-            }
+                                     where !resolved.Tokens.ContainsKey(token)
+                                     select new ThemeDiagnostic("Warning", "TOKEN004", $"Recommended token '{token}' is missing.",
+                                         $"{path}/tokens/{token}"));
 
             AddContrastDiagnostics(resolved, diagnostics, path, options.StrictContrast);
         }
@@ -100,8 +189,8 @@ public sealed class ThemeValidator
 
     private static void ValidateToken(string key, string value, List<ThemeDiagnostic> diagnostics, string path, ThemeValidationOptions options)
     {
-        string canonical = LegacyTokenAliases.Canonicalize(key);
-        if (!ThemeTokenCatalog.TryGet(canonical, out ThemeTokenDefinition? definition))
+        var canonical = LegacyTokenAliases.Canonicalize(key);
+        if (!ThemeTokenCatalog.TryGet(canonical, out var definition))
         {
             if (options.WarnUnknownTokens)
                 diagnostics.Add(new ThemeDiagnostic("Warning", "TOKEN003", $"Unknown token '{key}'.", path));
@@ -118,11 +207,11 @@ public sealed class ThemeValidator
                 break;
             case ThemeTokenType.Number:
             case ThemeTokenType.Duration:
-                if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double number) || number < 0)
+                if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number) || number < 0)
                     diagnostics.Add(new ThemeDiagnostic("Error", "TOKEN005", $"Token '{key}' must be a non-negative number.", path));
                 break;
             case ThemeTokenType.Opacity:
-                if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double opacity) || opacity < 0 || opacity > 1)
+                if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var opacity) || opacity < 0 || opacity > 1)
                     diagnostics.Add(new ThemeDiagnostic("Error", "TOKEN006", $"Token '{key}' must be an opacity from 0.0 through 1.0.", path));
                 break;
             case ThemeTokenType.FontFamily:
@@ -131,99 +220,6 @@ public sealed class ThemeValidator
                     diagnostics.Add(new ThemeDiagnostic("Error", "TOKEN007", $"Token '{key}' cannot be empty.", path));
                 break;
         }
-    }
-
-    /// <summary>
-    /// Adds WCAG-style contrast diagnostics for primary and secondary text tokens.
-    /// </summary>
-    private static void AddContrastDiagnostics(ResolvedTheme theme, List<ThemeDiagnostic> diagnostics, string path, bool strict)
-    {
-        if (!TryParseColor(theme.Get("color.surface.panel"), out var panel) ||
-            !TryParseColor(theme.Get("color.text.primary"), out var primary) ||
-            !TryParseColor(theme.Get("color.text.secondary"), out var secondary))
-        {
-            return;
-        }
-
-        var primaryRatio = Contrast(panel, primary);
-        var secondaryRatio = Contrast(panel, secondary);
-        var severity = strict ? "Error" : "Warning";
-
-        if (primaryRatio < 4.5)
-            diagnostics.Add(new ThemeDiagnostic(severity, "A11Y001", $"Primary text contrast is {primaryRatio:0.00}:1; expected at least 4.5:1.", $"{path}/contrast/primary"));
-
-        if (secondaryRatio < 3.0)
-            diagnostics.Add(new ThemeDiagnostic(severity, "A11Y002", $"Secondary text contrast is {secondaryRatio:0.00}:1; expected at least 3.0:1.", $"{path}/contrast/secondary"));
-
-        if (TryParseColor(theme.Get("color.text.disabled"), out var disabled))
-        {
-            var disabledRatio = Contrast(panel, disabled);
-            if (disabledRatio < 1.8)
-                diagnostics.Add(new ThemeDiagnostic(severity, "A11Y003", $"Disabled text contrast is {disabledRatio:0.00}:1; expected at least 1.8:1.", $"{path}/contrast/disabled"));
-        }
-
-        if (TryParseColor(theme.Get("color.status.danger"), out var danger))
-        {
-            var dangerRatio = Contrast(panel, danger);
-            if (dangerRatio < 3.0)
-                diagnostics.Add(new ThemeDiagnostic(severity, "A11Y004", $"Danger status contrast is {dangerRatio:0.00}:1; expected at least 3.0:1.", $"{path}/contrast/danger"));
-        }
-    }
-
-    /// <summary>
-    /// Parses a #RRGGBB or #AARRGGBB token value into RGBA channels.
-    /// </summary>
-    public static bool TryParseColor(string value, out RgbaColor color)
-    {
-        color = default;
-        if (string.IsNullOrWhiteSpace(value) || value[0] != '#')
-            return false;
-
-        var hex = value.Substring(1);
-        if (hex.Length != 6 && hex.Length != 8)
-            return false;
-
-        if (!uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var raw))
-            return false;
-
-        if (hex.Length == 6)
-            color = new RgbaColor(255, (byte)(raw >> 16), (byte)(raw >> 8), (byte)raw);
-        else
-            color = new RgbaColor((byte)(raw >> 24), (byte)(raw >> 16), (byte)(raw >> 8), (byte)raw);
-
-        return true;
-    }
-
-    /// <summary>
-    /// Determines whether a token key should contain a parseable color value.
-    /// </summary>
-    private static bool LooksColorToken(string key) =>
-        key.StartsWith("color.", StringComparison.OrdinalIgnoreCase) ||
-        LegacyTokenAliases.Map.ContainsKey(key) ||
-        key.EndsWith("Color", StringComparison.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Calculates the contrast ratio between two RGBA colors.
-    /// </summary>
-    private static double Contrast(RgbaColor a, RgbaColor b)
-    {
-        var l1 = Luminance(a) + 0.05;
-        var l2 = Luminance(b) + 0.05;
-        return Math.Max(l1, l2) / Math.Min(l1, l2);
-    }
-
-    /// <summary>
-    /// Calculates relative luminance for one RGBA color using sRGB channel conversion.
-    /// </summary>
-    private static double Luminance(RgbaColor color)
-    {
-        static double Channel(byte value)
-        {
-            var s = value / 255.0;
-            return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
-        }
-
-        return (0.2126 * Channel(color.R)) + (0.7152 * Channel(color.G)) + (0.0722 * Channel(color.B));
     }
 }
 

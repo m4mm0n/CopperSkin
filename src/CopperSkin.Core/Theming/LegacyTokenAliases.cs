@@ -26,6 +26,14 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public static class LegacyTokenAliases
 {
+
+    /// <summary>
+    /// Returns the canonical token key for a legacy or modern token name.
+    /// </summary>
+    public static string Canonicalize(string key)
+    {
+        return Map.TryGetValue(key, out var canonical) ? canonical : key;
+    }
     /// <summary>
     /// Documents this CopperSkin member.
     /// </summary>
@@ -55,12 +63,4 @@ public static class LegacyTokenAliases
         ["PanelShadow"] = "effect.shadow.panel",
         ["NeonGlow"] = "effect.glow.neon"
     };
-
-    /// <summary>
-    /// Returns the canonical token key for a legacy or modern token name.
-    /// </summary>
-    public static string Canonicalize(string key)
-    {
-        return Map.TryGetValue(key, out string? canonical) ? canonical : key;
-    }
 }

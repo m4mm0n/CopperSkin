@@ -26,61 +26,6 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ThemeResolver
 {
-    /// <summary>
-    /// Resolves the requested theme from a pack into a complete runtime token set.
-    /// </summary>
-    public ResolvedTheme Resolve(ThemePack pack, string idOrName)
-    {
-        if (pack is null)
-            throw new ArgumentNullException(nameof(pack));
-
-        var theme = pack.FindTheme(idOrName)
-                    ?? throw new InvalidOperationException($"Theme '{idOrName}' was not found in pack '{pack.Name}'.");
-
-        var merged = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        MergeBaseThemes(pack, theme, merged, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-
-        foreach (var pair in theme.Tokens)
-            merged[LegacyTokenAliases.Canonicalize(pair.Key)] = pair.Value;
-
-        AddLegacyAliases(merged);
-        AddDerivedTokens(merged);
-
-        return new ResolvedTheme(theme.Id, theme.Name, merged);
-    }
-
-    /// <summary>
-    /// Recursively merges inherited theme tokens while detecting base-theme cycles.
-    /// </summary>
-    private static void MergeBaseThemes(ThemePack pack, ThemeDefinition theme, Dictionary<string, string> merged, HashSet<string> seen)
-    {
-        if (string.IsNullOrWhiteSpace(theme.BaseThemeId))
-            return;
-
-        var baseThemeId = theme.BaseThemeId ?? string.Empty;
-        if (!seen.Add(baseThemeId))
-            throw new InvalidOperationException($"Theme inheritance cycle detected at '{baseThemeId}'.");
-
-        var parent = pack.FindTheme(baseThemeId);
-        if (parent is null)
-            throw new InvalidOperationException($"Base theme '{baseThemeId}' was not found.");
-
-        MergeBaseThemes(pack, parent, merged, seen);
-        foreach (var pair in parent.Tokens)
-            merged[LegacyTokenAliases.Canonicalize(pair.Key)] = pair.Value;
-    }
-
-    /// <summary>
-    /// Populates legacy amChipper token names from their canonical CopperSkin equivalents.
-    /// </summary>
-    private static void AddLegacyAliases(Dictionary<string, string> tokens)
-    {
-        foreach (var pair in LegacyTokenAliases.Map)
-        {
-            if (tokens.TryGetValue(pair.Value, out var value))
-                tokens[pair.Key] = value ?? string.Empty;
-        }
-    }
 
     /// <summary>
     /// Adds runtime convenience tokens for chrome, drawing surfaces, metrics, fonts, and effects.
@@ -131,6 +76,25 @@ public sealed class ThemeResolver
     }
 
     /// <summary>
+    /// Adds a default token value without overwriting a value supplied by the theme.
+    /// </summary>
+    private static void AddIfMissing(Dictionary<string, string> tokens, string key, string value)
+    {
+        if (!tokens.ContainsKey(key))
+            tokens[key] = value;
+    }
+
+    /// <summary>
+    /// Populates legacy amChipper token names from their canonical CopperSkin equivalents.
+    /// </summary>
+    private static void AddLegacyAliases(Dictionary<string, string> tokens)
+    {
+        foreach (var pair in LegacyTokenAliases.Map)
+            if (tokens.TryGetValue(pair.Value, out var value))
+                tokens[pair.Key] = value ?? string.Empty;
+    }
+
+    /// <summary>
     /// Copies a token value into a derived key only when the destination is not already defined.
     /// </summary>
     private static void Copy(Dictionary<string, string> tokens, string from, string to)
@@ -140,11 +104,45 @@ public sealed class ThemeResolver
     }
 
     /// <summary>
-    /// Adds a default token value without overwriting a value supplied by the theme.
+    /// Recursively merges inherited theme tokens while detecting base-theme cycles.
     /// </summary>
-    private static void AddIfMissing(Dictionary<string, string> tokens, string key, string value)
+    private static void MergeBaseThemes(ThemePack pack, ThemeDefinition theme, Dictionary<string, string> merged, HashSet<string> seen)
     {
-        if (!tokens.ContainsKey(key))
-            tokens[key] = value;
+        if (string.IsNullOrWhiteSpace(theme.BaseThemeId))
+            return;
+
+        var baseThemeId = theme.BaseThemeId ?? string.Empty;
+        if (!seen.Add(baseThemeId))
+            throw new InvalidOperationException($"Theme inheritance cycle detected at '{baseThemeId}'.");
+
+        var parent = pack.FindTheme(baseThemeId);
+        if (parent is null)
+            throw new InvalidOperationException($"Base theme '{baseThemeId}' was not found.");
+
+        MergeBaseThemes(pack, parent, merged, seen);
+        foreach (var pair in parent.Tokens)
+            merged[LegacyTokenAliases.Canonicalize(pair.Key)] = pair.Value;
+    }
+    /// <summary>
+    /// Resolves the requested theme from a pack into a complete runtime token set.
+    /// </summary>
+    public ResolvedTheme Resolve(ThemePack pack, string idOrName)
+    {
+        if (pack is null)
+            throw new ArgumentNullException(nameof(pack));
+
+        var theme = pack.FindTheme(idOrName)
+                    ?? throw new InvalidOperationException($"Theme '{idOrName}' was not found in pack '{pack.Name}'.");
+
+        var merged = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        MergeBaseThemes(pack, theme, merged, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+        foreach (var pair in theme.Tokens)
+            merged[LegacyTokenAliases.Canonicalize(pair.Key)] = pair.Value;
+
+        AddLegacyAliases(merged);
+        AddDerivedTokens(merged);
+
+        return new ResolvedTheme(theme.Id, theme.Name, merged);
     }
 }

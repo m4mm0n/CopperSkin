@@ -58,6 +58,21 @@ public sealed record ThemeTokenDefinition(
 /// </summary>
 public static class ThemeTokenCatalog
 {
+
+    /// <summary>
+    /// Gets every known CopperSkin token definition.
+    /// </summary>
+    public static IReadOnlyList<ThemeTokenDefinition> All => Definitions;
+
+    private static ThemeTokenDefinition Color(string key, string group, string description, string fallback, bool required = false) =>
+        new(key, ThemeTokenType.Color, group, description, fallback, required);
+
+    /// <summary>
+    /// Gets the full recommended default token set for a professional theme pack.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> Defaults => Definitions
+        .Where(static d => d.Recommended)
+        .ToDictionary(static d => d.Key, static d => d.DefaultValue, StringComparer.OrdinalIgnoreCase);
     private static readonly ThemeTokenDefinition[] Definitions =
     [
         Color("color.surface.deep", "Surface", "Application and window background.", "#FF101014", required: true),
@@ -127,31 +142,11 @@ public static class ThemeTokenCatalog
     private static readonly IReadOnlyDictionary<string, ThemeTokenDefinition> ByKey =
         Definitions.ToDictionary(static d => d.Key, StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Gets every known CopperSkin token definition.
-    /// </summary>
-    public static IReadOnlyList<ThemeTokenDefinition> All => Definitions;
+    private static ThemeTokenDefinition Duration(string key, string group, string description, string fallback) =>
+        new(key, ThemeTokenType.Duration, group, description, fallback);
 
-    /// <summary>
-    /// Gets the token keys required for a minimally renderable CopperSkin theme.
-    /// </summary>
-    public static IReadOnlyList<string> RequiredKeys => Definitions.Where(static d => d.Required).Select(static d => d.Key).ToArray();
-
-    /// <summary>
-    /// Gets the full recommended default token set for a professional theme pack.
-    /// </summary>
-    public static IReadOnlyDictionary<string, string> Defaults => Definitions
-        .Where(static d => d.Recommended)
-        .ToDictionary(static d => d.Key, static d => d.DefaultValue, StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Looks up a token definition by key, accepting legacy aliases.
-    /// </summary>
-    public static bool TryGet(string key, out ThemeTokenDefinition definition)
-    {
-        string canonical = LegacyTokenAliases.Canonicalize(key);
-        return ByKey.TryGetValue(canonical, out definition!);
-    }
+    private static ThemeTokenDefinition Font(string key, string group, string description, string fallback) =>
+        new(key, ThemeTokenType.FontFamily, group, description, fallback);
 
     /// <summary>
     /// Determines whether a token key is known to CopperSkin or intentionally adapter-scoped.
@@ -161,21 +156,26 @@ public static class ThemeTokenCatalog
         key.StartsWith("metadata.", StringComparison.OrdinalIgnoreCase) ||
         key.StartsWith("adapter.", StringComparison.OrdinalIgnoreCase);
 
-    private static ThemeTokenDefinition Color(string key, string group, string description, string fallback, bool required = false) =>
-        new(key, ThemeTokenType.Color, group, description, fallback, required);
-
     private static ThemeTokenDefinition Number(string key, string group, string description, string fallback) =>
         new(key, ThemeTokenType.Number, group, description, fallback);
 
     private static ThemeTokenDefinition Opacity(string key, string group, string description, string fallback) =>
         new(key, ThemeTokenType.Opacity, group, description, fallback);
 
-    private static ThemeTokenDefinition Duration(string key, string group, string description, string fallback) =>
-        new(key, ThemeTokenType.Duration, group, description, fallback);
-
-    private static ThemeTokenDefinition Font(string key, string group, string description, string fallback) =>
-        new(key, ThemeTokenType.FontFamily, group, description, fallback);
+    /// <summary>
+    /// Gets the token keys required for a minimally renderable CopperSkin theme.
+    /// </summary>
+    public static IReadOnlyList<string> RequiredKeys => Definitions.Where(static d => d.Required).Select(static d => d.Key).ToArray();
 
     private static ThemeTokenDefinition String(string key, string group, string description, string fallback, bool recommended = true) =>
         new(key, ThemeTokenType.String, group, description, fallback, Recommended: recommended);
+
+    /// <summary>
+    /// Looks up a token definition by key, accepting legacy aliases.
+    /// </summary>
+    public static bool TryGet(string key, out ThemeTokenDefinition definition)
+    {
+        var canonical = LegacyTokenAliases.Canonicalize(key);
+        return ByKey.TryGetValue(canonical, out definition!);
+    }
 }

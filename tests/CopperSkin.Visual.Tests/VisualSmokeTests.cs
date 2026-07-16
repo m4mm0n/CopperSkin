@@ -42,22 +42,29 @@ namespace CopperSkin.Visual.Tests;
 /// </summary>
 public sealed class VisualSmokeTests
 {
-    private const int WmContextMenu = 0x007B;
-    private const int WmNcRButtonDown = 0x00A4;
-    private const int WmSysCommand = 0x0112;
-    private const int ScMouseMenu = 0xF090;
-    private const int HtCaption = 2;
 
     /// <summary>
-    /// Verifies the Sample Rows Are Available behavior.
+    /// Verifies that a client-area context-menu message is left alone for WPF control-level handling.
     /// </summary>
-    [Fact]
-    public void SampleRowsAreAvailable()
+    private static void AssertNativeWindowContextMenuIsIgnored(CopperWindow window, int message, nint wParam, nint lParam)
     {
-        var row = new ControlRow("Window", "DWM aware");
+        var handled = InvokeWindowMessageHook(window, message, wParam, lParam);
 
-        Assert.Equal("Window", row.Name);
-        Assert.Equal("DWM aware", row.State);
+        Assert.False(handled);
+        Assert.False(window.ContextMenu?.IsOpen == true);
+    }
+
+    /// <summary>
+    /// Verifies that a native window-menu message is consumed and replaced by the themed CopperSkin menu.
+    /// </summary>
+    private static void AssertNativeWindowContextMenuIsReplaced(CopperWindow window, int message, nint wParam, nint lParam)
+    {
+        var handled = InvokeWindowMessageHook(window, message, wParam, lParam);
+
+        Assert.True(handled);
+        Assert.True(window.ContextMenu?.IsOpen == true);
+        window.ContextMenu!.IsOpen = false;
+        window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
     }
 
     /// <summary>
@@ -68,7 +75,7 @@ public sealed class VisualSmokeTests
     {
         RunOnSta(() =>
         {
-            string logDir = Path.Combine(Path.GetTempPath(), "copperskin-visual-test-" + Guid.NewGuid().ToString("N"));
+            var logDir = Path.Combine(Path.GetTempPath(), "copperskin-visual-test-" + Guid.NewGuid().ToString("N"));
             LogManager.ConfigureDefault(LoggerOptions.ForTool("copperskin-visual-test").WithJsonLog(Path.Combine(logDir, "visual.jsonl")));
 
             var app = Application.Current ?? new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
@@ -99,13 +106,38 @@ public sealed class VisualSmokeTests
             Assert.True(copperWindow.ContextMenu.IsOpen);
             copperWindow.ContextMenu.IsOpen = false;
 
-            nint hwnd = new WindowInteropHelper(copperWindow).Handle;
-            nint titleBarPoint = PackScreenPoint(new Point(copperWindow.Left + 64, copperWindow.Top + 12));
+            var hwnd = new WindowInteropHelper(copperWindow).Handle;
+            var titleBarPoint = PackScreenPoint(new Point(copperWindow.Left + 64, copperWindow.Top + 12));
             AssertNativeWindowContextMenuIsIgnored(copperWindow, WmContextMenu, hwnd, PackScreenPoint(copperWindow.PointToScreen(new Point(220, 220))));
             AssertNativeWindowContextMenuIsReplaced(copperWindow, WmNcRButtonDown, HtCaption, titleBarPoint);
             AssertNativeWindowContextMenuIsReplaced(copperWindow, WmContextMenu, hwnd, titleBarPoint);
             AssertNativeWindowContextMenuIsReplaced(copperWindow, WmSysCommand, ScMouseMenu, nint.Zero);
         });
+    }
+    private const int HtCaption = 2;
+
+    /// <summary>
+    /// Invokes CopperWindow's private message hook and returns whether the hook consumed the message.
+    /// </summary>
+    private static bool InvokeWindowMessageHook(CopperWindow window, int message, nint wParam, nint lParam)
+    {
+        var hook = typeof(CopperWindow).GetMethod("WindowMessageHook", BindingFlags.Instance | BindingFlags.NonPublic)
+                   ?? throw new InvalidOperationException("CopperWindow message hook was not found.");
+        object?[] args = [new WindowInteropHelper(window).Handle, message, wParam, lParam, false];
+
+        hook.Invoke(window, args);
+
+        return (bool)args[4]!;
+    }
+
+    /// <summary>
+    /// Packs a screen coordinate into the LPARAM format used by non-client mouse messages.
+    /// </summary>
+    private static nint PackScreenPoint(Point point)
+    {
+        var x = (int)Math.Round(point.X);
+        var y = (int)Math.Round(point.Y);
+        return unchecked((nint)((ushort)x | ((ushort)y << 16)));
     }
 
     /// <summary>
@@ -140,58 +172,33 @@ public sealed class VisualSmokeTests
     }
 
     /// <summary>
-    /// Verifies that a native window-menu message is consumed and replaced by the themed CopperSkin menu.
+    /// Verifies the Sample Rows Are Available behavior.
     /// </summary>
-    private static void AssertNativeWindowContextMenuIsReplaced(CopperWindow window, int message, nint wParam, nint lParam)
+    [Fact]
+    public void SampleRowsAreAvailable()
     {
-        bool handled = InvokeWindowMessageHook(window, message, wParam, lParam);
+        var row = new ControlRow("Window", "DWM aware");
 
-        Assert.True(handled);
-        Assert.True(window.ContextMenu?.IsOpen == true);
-        window.ContextMenu!.IsOpen = false;
-        window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.Equal("Window", row.Name);
+        Assert.Equal("DWM aware", row.State);
     }
-
-    /// <summary>
-    /// Verifies that a client-area context-menu message is left alone for WPF control-level handling.
-    /// </summary>
-    private static void AssertNativeWindowContextMenuIsIgnored(CopperWindow window, int message, nint wParam, nint lParam)
-    {
-        bool handled = InvokeWindowMessageHook(window, message, wParam, lParam);
-
-        Assert.False(handled);
-        Assert.False(window.ContextMenu?.IsOpen == true);
-    }
-
-    /// <summary>
-    /// Invokes CopperWindow's private message hook and returns whether the hook consumed the message.
-    /// </summary>
-    private static bool InvokeWindowMessageHook(CopperWindow window, int message, nint wParam, nint lParam)
-    {
-        MethodInfo hook = typeof(CopperWindow).GetMethod("WindowMessageHook", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("CopperWindow message hook was not found.");
-        object?[] args = [new WindowInteropHelper(window).Handle, message, wParam, lParam, false];
-
-        hook.Invoke(window, args);
-
-        return (bool)args[4]!;
-    }
-
-    /// <summary>
-    /// Packs a screen coordinate into the LPARAM format used by non-client mouse messages.
-    /// </summary>
-    private static nint PackScreenPoint(Point point)
-    {
-        int x = (int)Math.Round(point.X);
-        int y = (int)Math.Round(point.Y);
-        return unchecked((nint)((ushort)x | ((ushort)y << 16)));
-    }
+    private const int ScMouseMenu = 0xF090;
 
     /// <summary>
     /// Closes a WPF window at the end of a visual smoke-test scope.
     /// </summary>
     private sealed class WindowScope : IDisposable
     {
+
+        /// <summary>
+        /// Releases the scope and restores or closes the owned WPF resource.
+        /// </summary>
+        public void Dispose() => Window.Close();
+
+        /// <summary>
+        /// Gets the window owned by the smoke-test scope.
+        /// </summary>
+        public Window Window { get; }
         /// <summary>
         /// Verifies the Window Scope behavior.
         /// </summary>
@@ -199,15 +206,8 @@ public sealed class VisualSmokeTests
         {
             Window = window;
         }
-
-        /// <summary>
-        /// Gets the window owned by the smoke-test scope.
-        /// </summary>
-        public Window Window { get; }
-
-        /// <summary>
-        /// Releases the scope and restores or closes the owned WPF resource.
-        /// </summary>
-        public void Dispose() => Window.Close();
     }
+    private const int WmContextMenu = 0x007B;
+    private const int WmNcRButtonDown = 0x00A4;
+    private const int WmSysCommand = 0x0112;
 }

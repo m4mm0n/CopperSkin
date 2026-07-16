@@ -26,30 +26,6 @@ namespace CopperSkin.Core.Theming;
 /// </summary>
 public sealed class ThemePack
 {
-    /// <summary>
-    /// Gets or sets the stable identifier for the theme pack.
-    /// </summary>
-    public string Id { get; set; } = "copperskin";
-
-    /// <summary>
-    /// Gets or sets the display name for the theme pack.
-    /// </summary>
-    public string Name { get; set; } = "CopperSkin";
-
-    /// <summary>
-    /// Gets or sets the semantic version of the theme pack.
-    /// </summary>
-    public string Version { get; set; } = "0.2.0.0";
-
-    /// <summary>
-    /// Gets or sets package-level authoring, compatibility, signing, and gallery metadata.
-    /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Gets or sets the ordered themes distributed inside this pack.
-    /// </summary>
-    public List<ThemeDefinition> Themes { get; set; } = [];
 
     /// <summary>
     /// Finds a theme by id, display name, or normalized name.
@@ -61,4 +37,28 @@ public sealed class ThemePack
             string.Equals(theme.Name, idOrName, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(ThemeNames.Normalize(theme.Name), ThemeNames.Normalize(idOrName), StringComparison.OrdinalIgnoreCase));
     }
+    /// <summary>
+    /// Gets or sets the stable identifier for the theme pack.
+    /// </summary>
+    public string Id { get; set; } = "copperskin";
+
+    /// <summary>
+    /// Gets or sets package-level authoring, compatibility, signing, and gallery metadata.
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets or sets the display name for the theme pack.
+    /// </summary>
+    public string Name { get; set; } = "CopperSkin";
+
+    /// <summary>
+    /// Gets or sets the ordered themes distributed inside this pack.
+    /// </summary>
+    public List<ThemeDefinition> Themes { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the semantic version of the theme pack.
+    /// </summary>
+    public string Version { get; set; } = "0.2.0.0";
 }

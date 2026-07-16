@@ -1195,6 +1195,7 @@
               <Setter TargetName="LineIncreaseButton" Property="Command" Value="{x:Static ScrollBar.LineRightCommand}"/>
               <Setter TargetName="PageDecreaseButton" Property="Command" Value="{x:Static ScrollBar.PageLeftCommand}"/>
               <Setter TargetName="PageIncreaseButton" Property="Command" Value="{x:Static ScrollBar.PageRightCommand}"/>
+              <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
               <Setter TargetName="DecreaseVerticalGlyph" Property="Visibility" Value="Collapsed"/>
               <Setter TargetName="IncreaseVerticalGlyph" Property="Visibility" Value="Collapsed"/>
               <Setter TargetName="DecreaseHorizontalGlyph" Property="Visibility" Value="Visible"/>

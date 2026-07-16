@@ -31,58 +31,6 @@ namespace CopperSkin.Wpf.Drawing;
 /// </summary>
 public sealed class DrawingThemeSnapshot
 {
-    /// <summary>
-    /// Gets the brush used for deep drawing-surface backgrounds.
-    /// </summary>
-    public Brush Surface { get; private init; } = Brushes.Black;
-    /// <summary>
-    /// Gets the brush used for panel fills inside drawing surfaces.
-    /// </summary>
-    public Brush Panel { get; private init; } = Brushes.Black;
-    /// <summary>
-    /// Gets the brush used for fine tracker grid lines.
-    /// </summary>
-    public Brush GridLine { get; private init; } = Brushes.DimGray;
-    /// <summary>
-    /// Gets the brush used for stronger tracker bar lines.
-    /// </summary>
-    public Brush GridBar { get; private init; } = Brushes.Gray;
-    /// <summary>
-    /// Gets the brush used for the active playhead marker.
-    /// </summary>
-    public Brush Playhead { get; private init; } = Brushes.Red;
-    /// <summary>
-    /// Gets the brush used for tracker note text.
-    /// </summary>
-    public Brush TrackerNote { get; private init; } = Brushes.LightBlue;
-    /// <summary>
-    /// Gets the brush used for tracker instrument text.
-    /// </summary>
-    public Brush TrackerInstrument { get; private init; } = Brushes.Gold;
-    /// <summary>
-    /// Gets the brush used for tracker volume text.
-    /// </summary>
-    public Brush TrackerVolume { get; private init; } = Brushes.LightGreen;
-    /// <summary>
-    /// Gets the brush used for tracker effect text.
-    /// </summary>
-    public Brush TrackerEffect { get; private init; } = Brushes.Orange;
-    /// <summary>
-    /// Gets the brush used for white-key regions in piano-style drawing surfaces.
-    /// </summary>
-    public Brush PianoWhite { get; private init; } = Brushes.White;
-    /// <summary>
-    /// Gets the brush used for black-key regions in piano-style drawing surfaces.
-    /// </summary>
-    public Brush PianoBlack { get; private init; } = Brushes.Black;
-    /// <summary>
-    /// Gets the frozen pen used for thin tracker grid lines.
-    /// </summary>
-    public Pen GridLinePen { get; private init; } = new(Brushes.DimGray, 0.5);
-    /// <summary>
-    /// Gets the frozen pen used for the active playhead line.
-    /// </summary>
-    public Pen PlayheadPen { get; private init; } = new(Brushes.Red, 1.5);
 
     /// <summary>
     /// Gets the fallback drawing palette used before an application theme has been applied.
@@ -108,8 +56,8 @@ public sealed class DrawingThemeSnapshot
             return pen;
         }
 
-        Brush grid = B("color.editor.grid.line", "#FF252535");
-        Brush playhead = B("color.editor.playhead", "#FFFF4444");
+        var grid = B("color.editor.grid.line", "#FF252535");
+        var playhead = B("color.editor.playhead", "#FFFF4444");
         return new DrawingThemeSnapshot
         {
             Surface = B("color.surface.deep", "#FF171221"),
@@ -127,4 +75,56 @@ public sealed class DrawingThemeSnapshot
             PlayheadPen = P(playhead, 1.5)
         };
     }
+    /// <summary>
+    /// Gets the brush used for stronger tracker bar lines.
+    /// </summary>
+    public Brush GridBar { get; private init; } = Brushes.Gray;
+    /// <summary>
+    /// Gets the brush used for fine tracker grid lines.
+    /// </summary>
+    public Brush GridLine { get; private init; } = Brushes.DimGray;
+    /// <summary>
+    /// Gets the frozen pen used for thin tracker grid lines.
+    /// </summary>
+    public Pen GridLinePen { get; private init; } = new(Brushes.DimGray, 0.5);
+    /// <summary>
+    /// Gets the brush used for panel fills inside drawing surfaces.
+    /// </summary>
+    public Brush Panel { get; private init; } = Brushes.Black;
+    /// <summary>
+    /// Gets the brush used for black-key regions in piano-style drawing surfaces.
+    /// </summary>
+    public Brush PianoBlack { get; private init; } = Brushes.Black;
+    /// <summary>
+    /// Gets the brush used for white-key regions in piano-style drawing surfaces.
+    /// </summary>
+    public Brush PianoWhite { get; private init; } = Brushes.White;
+    /// <summary>
+    /// Gets the brush used for the active playhead marker.
+    /// </summary>
+    public Brush Playhead { get; private init; } = Brushes.Red;
+    /// <summary>
+    /// Gets the frozen pen used for the active playhead line.
+    /// </summary>
+    public Pen PlayheadPen { get; private init; } = new(Brushes.Red, 1.5);
+    /// <summary>
+    /// Gets the brush used for deep drawing-surface backgrounds.
+    /// </summary>
+    public Brush Surface { get; private init; } = Brushes.Black;
+    /// <summary>
+    /// Gets the brush used for tracker effect text.
+    /// </summary>
+    public Brush TrackerEffect { get; private init; } = Brushes.Orange;
+    /// <summary>
+    /// Gets the brush used for tracker instrument text.
+    /// </summary>
+    public Brush TrackerInstrument { get; private init; } = Brushes.Gold;
+    /// <summary>
+    /// Gets the brush used for tracker note text.
+    /// </summary>
+    public Brush TrackerNote { get; private init; } = Brushes.LightBlue;
+    /// <summary>
+    /// Gets the brush used for tracker volume text.
+    /// </summary>
+    public Brush TrackerVolume { get; private init; } = Brushes.LightGreen;
 }
