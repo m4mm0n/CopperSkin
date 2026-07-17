@@ -124,6 +124,23 @@ public sealed class WpfThemeTests
         });
     }
 
+    /// <summary>
+    /// Verifies the first v0.3 primitive and media control coverage wave is available in the public resource scope.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesCoverV03PrimitiveAndMediaControls()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            Assert.IsType<Style>(resources[typeof(BulletDecorator)]);
+            Assert.IsType<Style>(resources[typeof(Image)]);
+            Assert.IsType<Style>(resources[typeof(InkPresenter)]);
+            Assert.IsType<Style>(resources[typeof(MediaElement)]);
+        });
+    }
+
     private static void RunOnSta(Action action)
     {
         Exception? exception = null;

@@ -20,6 +20,7 @@
  */
 // CRC32-BODY: 3F66CDE8
 using System.Globalization;
+using CopperSkin.Core.Graphics;
 
 namespace CopperSkin.Core.Theming;
 
@@ -182,6 +183,12 @@ public sealed class ThemeValidator
                                          $"{path}/tokens/{token}"));
 
             AddContrastDiagnostics(resolved, diagnostics, path, options.StrictContrast);
+        }
+
+        foreach (var graphic in pack.Graphics ?? [])
+        {
+            diagnostics.AddRange(GraphicDocumentValidator.Validate(graphic)
+                .Select(diagnostic => new ThemeDiagnostic(diagnostic.Severity, diagnostic.Code, diagnostic.Message, $"graphics/{graphic.Id}/{diagnostic.Path}")));
         }
 
         return diagnostics;

@@ -1275,4 +1275,28 @@
     <Setter Property="Background" Value="{DynamicResource CopperSkin.ChromeBrush}"/>
   </Style>
 
+  <!-- v0.3 primitive/media coverage: these framework-owned surfaces receive safe defaults, not custom-hosted behavior. -->
+  <Style TargetType="{x:Type BulletDecorator}">
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type Image}">
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type InkPresenter}">
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type MediaElement}">
+    <Setter Property="LoadedBehavior" Value="Manual"/>
+    <Setter Property="UnloadedBehavior" Value="Stop"/>
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+  </Style>
+
 </ResourceDictionary>

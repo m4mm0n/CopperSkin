@@ -8,6 +8,8 @@ CopperSkin ships an implicit WPF style dictionary plus dedicated owner controls.
 - `CopperMessageBox`: themed replacement flow for simple message boxes.
 - `CopperTaskDialog`: themed task dialog flow for richer prompts.
 - `TrackerPreviewControl`: drawing-surface sample for theme-aware custom renderers.
+- `GraphicCanvas`: shared document-space renderer and hit-test surface for icons and basic painting.
+- `CopperIcon`: reusable runtime display surface for Core graphics documents.
 - `CopperSkinThemeScope`: attached-property theme scope for any WPF subtree.
 
 ## Styled WPF Controls
@@ -18,6 +20,7 @@ The runtime resource dictionary includes implicit styles for:
 - buttons: `Button`, `RepeatButton`, `ToggleButton`
 - input: `TextBoxBase`, `TextBox`, `PasswordBox`, `RichTextBox`, `ComboBox`, `ComboBoxItem`, `DatePicker`, `DatePickerTextBox`
 - choice: `CheckBox`, `RadioButton`, `Slider`
+- primitives/media: `BulletDecorator`, `Image`, `InkPresenter`, `MediaElement` (safe default styling; external media hosting remains application-owned)
 - lists and trees: `ListBox`, `ListBoxItem`, `ListView`, `GridViewColumnHeader`, `TreeView`, `TreeViewItem`
 - data: `DataGrid`, `DataGridRow`, `DataGridColumnHeader`, `DataGridColumnHeadersPresenter`, `DataGridRowHeader`, `DataGridCell`
 - menus and popups: `Menu`, `MenuItem`, `ContextMenu`, `Popup`, `Separator`
@@ -30,5 +33,7 @@ Panels such as `Grid`, `StackPanel`, `DockPanel`, `Canvas`, `WrapPanel`, `Unifor
 ## Extension Points
 
 Applications can register custom drawing surfaces through `DrawingThemeRegistry`. Registered surfaces receive frozen brush snapshots every time the active theme changes.
+
+The v0.3 graphics surfaces use `CopperSkin.Core.Graphics` documents. The Designer owns editing commands; runtime applications can render the same document through `GraphicCanvas` or `CopperIcon`.
 
 Applications can also install their own resources after CopperSkin and override any token key, brush, gradient, or effect by using normal WPF resource precedence.
