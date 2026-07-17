@@ -28,3 +28,5 @@ Current evidence:
 - Full solution verification after export wiring: build 0 warnings/0 errors; 15 Core, 5 CLI, 11 WPF per .NET 8/9/10, 1 Designer per .NET 8/9/10, and 2 visual per .NET 8/9/10 all passed.
 - Commit 35645f5 Add v0.3 graphics editor foundation was pushed to origin/feature/v0.3-upgrade.
 - Layer command slice verified by the full solution gate: add/remove/reorder/visibility/lock UI compiles and Designer history suites remain green.
+- CLI graphics slice: 6 CLI tests passed; validate, inspect, and canonical JSON export are covered.
+- Full solution verification after CLI wiring: build 0 warnings/0 errors; 15 Core, 6 CLI, 11 WPF per .NET 8/9/10, 1 Designer per .NET 8/9/10, and 2 visual per .NET 8/9/10 all passed.

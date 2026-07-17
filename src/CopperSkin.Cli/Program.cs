@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using CopperSkin.Core.Audit;
+using CopperSkin.Core.Graphics;
 using CopperSkin.Core.Theming;
 using QuickLog;
 
@@ -99,6 +100,56 @@ public static class Program
     {
         ThemeTooling.WriteGallery(ReadPack(packPath), outputDirectory);
         Console.WriteLine($"Gallery written to {outputDirectory}");
+        return 0;
+    }
+
+    /// <summary>
+    /// Inspects, validates, or canonicalizes a Core graphics document without starting WPF.
+    /// </summary>
+    private static int Graphics(string operation, string inputPath, string outputPath)
+    {
+        var document = GraphicDocumentSerializer.Deserialize(File.ReadAllText(inputPath));
+        return operation.ToLowerInvariant() switch
+        {
+            "validate" => ValidateGraphics(document),
+            "inspect" => InspectGraphics(document),
+            "export" => ExportGraphics(document, outputPath),
+            _ => UnknownGraphicsOperation(operation)
+        };
+    }
+
+    private static int ValidateGraphics(GraphicDocument document)
+    {
+        var diagnostics = GraphicDocumentValidator.Validate(document);
+        foreach (var diagnostic in diagnostics)
+            Console.WriteLine($"{diagnostic.Severity} {diagnostic.Code} {diagnostic.Path}: {diagnostic.Message}");
+        var errors = diagnostics.Count(static diagnostic => diagnostic.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase));
+        Console.WriteLine($"Validated graphics document '{document.Id}': {errors} error(s), {diagnostics.Count - errors} warning(s).");
+        return errors == 0 ? 0 : 2;
+    }
+
+    private static int InspectGraphics(GraphicDocument document)
+    {
+        Console.WriteLine($"Id: {document.Id}");
+        Console.WriteLine($"Name: {document.Name}");
+        Console.WriteLine($"Type: {document.DocumentType}");
+        Console.WriteLine($"Canvas: {document.Width:0.###} x {document.Height:0.###}");
+        Console.WriteLine($"Layers: {document.Layers.Count}");
+        Console.WriteLine($"Elements: {document.Layers.Sum(static layer => layer.Elements.Count)}");
+        return 0;
+    }
+
+    private static int ExportGraphics(GraphicDocument document, string outputPath)
+    {
+        var extension = Path.GetExtension(outputPath);
+        if (!string.Equals(extension, ".json", StringComparison.OrdinalIgnoreCase) && !string.Equals(extension, ".cgraphic", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine("SVG, XAML, and PNG export require the WPF renderer; use the Designer or CopperSkin.Wpf export API.");
+            return 3;
+        }
+
+        WriteText(outputPath, GraphicDocumentSerializer.Serialize(document));
+        Console.WriteLine($"Canonical graphics document written to {outputPath}");
         return 0;
     }
 
@@ -200,6 +251,9 @@ public static class Program
         Console.WriteLine("  pack <directory> <out.cskin>");
         Console.WriteLine("  unpack <in.cskin> <directory>");
         Console.WriteLine("  lzhc <directory> <out.lzhc>");
+        Console.WriteLine("  graphics validate <document.cgraphic|json>");
+        Console.WriteLine("  graphics inspect <document.cgraphic|json>");
+        Console.WriteLine("  graphics export <document.cgraphic|json> <out.cgraphic|json>");
     }
 
     private static ThemePack ReadPack(string path) => File.Exists(path) ? ThemeJsonSerializer.ReadPack(path) : BuiltInThemeCatalog.Create();
@@ -234,6 +288,7 @@ public static class Program
             "pack" => Pack(Arg(args, 1, "."), Arg(args, 2, "artifacts/theme.cskin")),
             "unpack" => Unpack(Arg(args, 1, "artifacts/theme.cskin"), Arg(args, 2, "artifacts/unpacked")),
             "lzhc" => Lzhc(Arg(args, 1, "."), Arg(args, 2, "artifacts/package.lzhc")),
+            "graphics" => Graphics(Arg(args, 1, "validate"), Arg(args, 2, "artifacts/graphics.cgraphic"), Arg(args, 3, "artifacts/graphics.json")),
             _ => Unknown(args[0])
         };
     }
@@ -278,6 +333,12 @@ public static class Program
     {
         Console.Error.WriteLine($"Unknown command '{command}'.");
         PrintHelp();
+        return 1;
+    }
+
+    private static int UnknownGraphicsOperation(string operation)
+    {
+        Console.Error.WriteLine($"Unknown graphics operation '{operation}'. Use validate, inspect, or export.");
         return 1;
     }
 
