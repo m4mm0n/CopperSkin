@@ -41,6 +41,14 @@
       <Border Grid.Column="0" Style="{StaticResource CopperSkin.PanelBorder}" Margin="0,0,8,0" Padding="8">
         <DockPanel>
           <TextBlock DockPanel.Dock="Top" Text="Layers" Style="{StaticResource CopperSkin.SectionTitle}"/>
+          <WrapPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <Button Content="+" Width="30" Click="AddLayer_Click" ToolTip="Add layer"/>
+            <Button Content="−" Width="30" Margin="4,0,0,0" Click="RemoveLayer_Click" ToolTip="Remove selected layer"/>
+            <Button Content="↑" Width="30" Margin="4,0,0,0" Click="MoveLayerUp_Click" ToolTip="Move selected layer up"/>
+            <Button Content="↓" Width="30" Margin="4,0,0,0" Click="MoveLayerDown_Click" ToolTip="Move selected layer down"/>
+            <Button Content="Vis" Margin="4,0,0,0" Click="ToggleLayerVisibility_Click" ToolTip="Toggle selected layer visibility"/>
+            <Button Content="Lock" Margin="4,0,0,0" Click="ToggleLayerLock_Click" ToolTip="Toggle selected layer lock"/>
+          </WrapPanel>
           <ListBox x:Name="LayerList" DisplayMemberPath="Name"/>
         </DockPanel>
       </Border>
