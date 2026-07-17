@@ -26,3 +26,4 @@ Current evidence:
 - WPF export/control wave: 11 tests passed per .NET 8/9/10, including SVG/XAML determinism, PNG dimensions, and four new primitive/media resource styles.
 - Designer history: 1 test passed per .NET 8/9/10.
 - Full solution verification after export wiring: build 0 warnings/0 errors; 15 Core, 5 CLI, 11 WPF per .NET 8/9/10, 1 Designer per .NET 8/9/10, and 2 visual per .NET 8/9/10 all passed.
+- Commit 35645f5 Add v0.3 graphics editor foundation was pushed to origin/feature/v0.3-upgrade.

@@ -18,7 +18,7 @@ Completed todos: isolated worktree, baseline evidence, Core document model, vali
 
 Active slice: editor-and-control-expansion.
 
-Evidence refs: worktree branch feature/v0.3-upgrade at C:/Users/admin/.config/aegis/worktrees/CopperSkin/v0.3-upgrade; source main remains dirty but untouched; Release build 0 warnings/0 errors; solution tests 15 Core, 5 CLI, 11 WPF per .NET 8/9/10, 1 Designer-history test per .NET 8/9/10, 2 visual per .NET 8/9/10.
+Evidence refs: worktree branch feature/v0.3-upgrade at C:/Users/admin/.config/aegis/worktrees/CopperSkin/v0.3-upgrade; source main remains dirty but untouched; implementation commit 35645f5 pushed to origin/feature/v0.3-upgrade; Release build 0 warnings/0 errors; solution tests 15 Core, 5 CLI, 11 WPF per .NET 8/9/10, 1 Designer-history test per .NET 8/9/10, 2 visual per .NET 8/9/10.
 
 Blocked on: no blocker yet.
 
