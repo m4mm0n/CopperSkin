@@ -50,6 +50,8 @@ public partial class GraphicsEditorView : UserControl
         _layers.Clear();
         foreach (var layer in document.Layers)
             _layers.Add(layer);
+        if (_layers.Count > 0)
+            LayerList.SelectedIndex = 0;
         DocumentNameText.Text = document.Name;
         DocumentSizeText.Text = $"{document.Width:0} × {document.Height:0} · {document.DocumentType}";
         ToolText.Text = _tool.ToString();
@@ -161,6 +163,79 @@ public partial class GraphicsEditorView : UserControl
         Document.Layers.Add(layer);
         _layers.Add(layer);
         return layer;
+    }
+
+    private GraphicLayer? SelectedLayer => LayerList.SelectedItem as GraphicLayer;
+
+    private void AddLayer_Click(object sender, RoutedEventArgs e)
+    {
+        _history.Record(Document);
+        var layer = AddLayer();
+        LayerList.SelectedItem = layer;
+        GraphicSurface.InvalidateVisual();
+        StatusText.Text = $"Added {layer.Name}.";
+    }
+
+    private void RemoveLayer_Click(object sender, RoutedEventArgs e)
+    {
+        var layer = SelectedLayer;
+        if (layer is null || Document.Layers.Count <= 1)
+        {
+            StatusText.Text = "A document must keep at least one layer.";
+            return;
+        }
+
+        _history.Record(Document);
+        var index = Document.Layers.IndexOf(layer);
+        Document.Layers.RemoveAt(index);
+        _layers.Remove(layer);
+        LayerList.SelectedIndex = Math.Min(index, _layers.Count - 1);
+        GraphicSurface.InvalidateVisual();
+        StatusText.Text = $"Removed {layer.Name}.";
+    }
+
+    private void MoveLayerUp_Click(object sender, RoutedEventArgs e) => MoveLayer(-1);
+
+    private void MoveLayerDown_Click(object sender, RoutedEventArgs e) => MoveLayer(1);
+
+    private void MoveLayer(int offset)
+    {
+        var layer = SelectedLayer;
+        if (layer is null)
+            return;
+        var index = Document.Layers.IndexOf(layer);
+        var target = index + offset;
+        if (index < 0 || target < 0 || target >= Document.Layers.Count)
+            return;
+
+        _history.Record(Document);
+        Document.Layers.RemoveAt(index);
+        Document.Layers.Insert(target, layer);
+        _layers.Move(index, target);
+        LayerList.SelectedItem = layer;
+        GraphicSurface.InvalidateVisual();
+        StatusText.Text = $"Moved {layer.Name}.";
+    }
+
+    private void ToggleLayerVisibility_Click(object sender, RoutedEventArgs e)
+    {
+        var layer = SelectedLayer;
+        if (layer is null)
+            return;
+        _history.Record(Document);
+        layer.IsVisible = !layer.IsVisible;
+        GraphicSurface.InvalidateVisual();
+        StatusText.Text = $"{layer.Name} visibility: {(layer.IsVisible ? "visible" : "hidden")}.";
+    }
+
+    private void ToggleLayerLock_Click(object sender, RoutedEventArgs e)
+    {
+        var layer = SelectedLayer;
+        if (layer is null)
+            return;
+        _history.Record(Document);
+        layer.IsLocked = !layer.IsLocked;
+        StatusText.Text = $"{layer.Name} lock: {(layer.IsLocked ? "locked" : "unlocked")}.";
     }
 
     private void Undo_Click(object sender, RoutedEventArgs e)
