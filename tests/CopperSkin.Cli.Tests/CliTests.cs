@@ -22,6 +22,8 @@
 
 namespace CopperSkin.Cli.Tests;
 
+using CopperSkin.Core.Graphics;
+
 /// <summary>
 /// Verifies the CopperSkin CLI command paths used by release packaging.
 /// </summary>
@@ -114,5 +116,31 @@ public sealed class CliTests
         Assert.Equal(0, Program.Main(["migrate", root, report]));
 
         Assert.Contains("CopperSkin Migration Report", File.ReadAllText(report));
+    }
+
+    /// <summary>
+    /// Verifies graphics validation, inspection, and canonical export commands.
+    /// </summary>
+    [Fact]
+    public void GraphicsCommandsValidateInspectAndExport()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperskin-graphics-cli-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var input = Path.Combine(root, "sample.cgraphic");
+        var output = Path.Combine(root, "sample.json");
+        var document = new GraphicDocument
+        {
+            Id = "cli-sample",
+            Name = "CLI Sample",
+            Width = 24,
+            Height = 24,
+            Layers = [new GraphicLayer { Id = "layer", Name = "Layer" }]
+        };
+        File.WriteAllText(input, GraphicDocumentSerializer.Serialize(document));
+
+        Assert.Equal(0, Program.Main(["graphics", "validate", input]));
+        Assert.Equal(0, Program.Main(["graphics", "inspect", input]));
+        Assert.Equal(0, Program.Main(["graphics", "export", input, output]));
+        Assert.Equal(GraphicDocumentSerializer.Serialize(document), File.ReadAllText(output));
     }
 }
