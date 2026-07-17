@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added the v0.3 Core graphics document model with versioned JSON serialization, validation, pack persistence, and signature participation.
+- Added shared WPF GraphicCanvas, CopperIcon, renderer, and document-space hit testing.
+- Added a Designer Graphics tab with icon/paint presets, rectangle/ellipse/line/freehand tools, save/open, zoom, and snapshot undo/redo.
+- Added initial v0.3 safe default styling for BulletDecorator, Image, InkPresenter, and MediaElement.
 - Added `CopperSkinThemeResources`, a XAML-loadable resource dictionary that lets host apps and Visual Studio designer surfaces render CopperSkin styling before runtime startup executes.
 - Added no-dependency B-233 binary-field ECDSA theme-pack signing, key generation, and trusted-public-key verification.
 - Added broader implicit WPF standard-control coverage for shell, item, text/document, popup, data-grid, toolbar, resize, and document primitives.

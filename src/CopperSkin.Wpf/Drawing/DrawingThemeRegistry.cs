@@ -61,6 +61,17 @@ public static class DrawingThemeRegistry
 
         surface.ApplyTheme(_current);
     }
+
+    /// <summary>
+    /// Removes a drawing surface from the live-theme registry.
+    /// </summary>
+    public static void Unregister(IThemeAwareDrawingSurface surface)
+    {
+        lock (Surfaces)
+        {
+            Surfaces.RemoveAll(reference => reference.TryGetTarget(out var existing) && ReferenceEquals(existing, surface));
+        }
+    }
     /// <summary>
     /// Tracks registered drawing surfaces without keeping them alive after their WPF owners are gone.
     /// </summary>
