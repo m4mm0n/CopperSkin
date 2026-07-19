@@ -37,11 +37,11 @@ public static class BuiltInThemeCatalog
         {
             Id = "copperskin.amchipper",
             Name = "CopperSkin amChipper Classics",
-            Version = "0.2.0.0",
+            Version = "0.3.0.0",
             Metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["author"] = "ZeroLinez Softworx",
-                ["compatibility.copperskin"] = "0.2.0.0",
+                ["compatibility.copperskin"] = "0.3.0.0",
                 ["preview.logo"] = "mainlogo.png"
             }
         };

@@ -22,6 +22,21 @@
 - Fixed Designer collection updates to use supported `ObservableCollection` operations.
 - Fixed static initialization ordering for the token catalog and B-233 base point; release signing no longer produces an all-zero public key or loops on zero signature coordinates.
 
+## v0.3.0.0 - 2026-07-19
+
+### Added
+
+- Added the first public-release graphics document contract for vector-first icons and basic painting.
+- Added the Designer Graphics tab with presets, shape/freehand tools, layers, history, save/open, zoom, and deterministic SVG/XAML/PNG export.
+- Added runtime `GraphicCanvas` and `CopperIcon` surfaces with theme-token fill/stroke resolution.
+- Added a Windows CI workflow, package metadata, MIT license, security policy, contribution guide, and release checklist.
+
+### Changed
+
+- Bumped assembly, package, built-in theme-pack, and compatibility metadata to `0.3.0.0`.
+- Enabled warnings-as-errors for the release build.
+- Documented control behavior, accessibility expectations, graphics file format, and clean-checkout release gates.
+
 ## v0.2.0.0 - 2026-06-04
 
 ### Added

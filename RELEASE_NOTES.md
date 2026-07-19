@@ -1,6 +1,6 @@
-# CopperSkin 0.2.0.0
+# CopperSkin 0.3.0.0
 
-Release candidate for the reusable CopperSkin engine, designer, CLI, sample app, and release bundle.
+First official public release of the reusable CopperSkin engine, designer, CLI, sample app, and release packages.
 
 ## Highlights
 
@@ -14,9 +14,13 @@ Release candidate for the reusable CopperSkin engine, designer, CLI, sample app,
 - The Designer includes a browsable token catalog beside live token editing and preview.
 - Theme-pack signing now uses no-dependency B-233 binary-field ECDSA metadata with reusable key generation and trusted public-key verification.
 - Standard WPF styling coverage now includes broader shell, item, document, popup, data-grid, toolbar, resize, and text surfaces.
+- The Designer now includes a vector-first Graphics tab for icon and basic-paint authoring with layers, history, zoom, save/open, and export.
+- Core graphics documents can be validated, inspected, serialized, embedded in theme packs, and rendered by WPF `GraphicCanvas` or `CopperIcon`.
+- SVG, DrawingImage XAML, and PNG export adapters are deterministic and covered by WPF tests.
+- Repository release metadata, MIT licensing, Windows CI, package validation, and tag-gated NuGet publishing are included.
 - The Designer preview now includes a full standard-control tab and an in-studio QuickLog-backed event log.
-- Release-internal planning notes were removed from public docs.
-- Package, assembly, theme pack, and release metadata were bumped to `0.2.0.0`.
+- The corrected horizontal scrollbar direction is covered by regression tests and documented in the accessibility contract.
+- Package, assembly, theme pack, and release metadata are `0.3.0.0`.
 
 ## Included
 

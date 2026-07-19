@@ -21,6 +21,7 @@
 // CRC32-BODY: 3A792B13
 // copperskin:allow-hardcoded-color-file
 using System.Windows.Media;
+using System.Collections.Generic;
 using CopperSkin.Core.Theming;
 using CopperSkin.Wpf.Resources;
 
@@ -31,6 +32,8 @@ namespace CopperSkin.Wpf.Drawing;
 /// </summary>
 public sealed class DrawingThemeSnapshot
 {
+    private IReadOnlyDictionary<string, Brush> TokenBrushes { get; init; } =
+        new Dictionary<string, Brush>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the fallback drawing palette used before an application theme has been applied.
@@ -56,6 +59,23 @@ public sealed class DrawingThemeSnapshot
             return pen;
         }
 
+        var tokenBrushes = new Dictionary<string, Brush>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in theme.Tokens)
+        {
+            if (!pair.Key.StartsWith("color.", StringComparison.OrdinalIgnoreCase)
+                || !pair.Value.StartsWith("#", StringComparison.Ordinal))
+                continue;
+
+            try
+            {
+                tokenBrushes[pair.Key] = B(pair.Key, pair.Value);
+            }
+            catch (FormatException)
+            {
+                // Invalid theme values are diagnosed by Core; drawing keeps its safe fallback.
+            }
+        }
+
         var grid = B("color.editor.grid.line", "#FF252535");
         var playhead = B("color.editor.playhead", "#FFFF4444");
         return new DrawingThemeSnapshot
@@ -72,9 +92,16 @@ public sealed class DrawingThemeSnapshot
             PianoWhite = B("color.editor.piano.white", "#FFF4F5FF"),
             PianoBlack = B("color.editor.piano.black", "#FF05050B"),
             GridLinePen = P(grid, 0.5),
-            PlayheadPen = P(playhead, 1.5)
+            PlayheadPen = P(playhead, 1.5),
+            TokenBrushes = tokenBrushes
         };
     }
+
+    /// <summary>
+    /// Resolves a color token for a graphics document, or returns <see langword="null"/> when unavailable.
+    /// </summary>
+    public Brush? GetTokenBrush(string? token) =>
+        !string.IsNullOrWhiteSpace(token) && TokenBrushes.TryGetValue(token, out var brush) ? brush : null;
     /// <summary>
     /// Gets the brush used for stronger tracker bar lines.
     /// </summary>

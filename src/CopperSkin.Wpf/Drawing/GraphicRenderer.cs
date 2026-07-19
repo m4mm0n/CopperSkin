@@ -23,7 +23,7 @@ public static class GraphicRenderer
             throw new ArgumentNullException(nameof(theme));
 
         var canvas = new Rect(0, 0, document.Width, document.Height);
-        var background = CreateBrush(document.Background);
+        var background = CreateBrush(document.Background, null, theme);
         if (background is not null)
             drawingContext.DrawRectangle(background, null, canvas);
 
@@ -33,11 +33,11 @@ public static class GraphicRenderer
                 continue;
 
             foreach (var element in layer.Elements)
-                RenderElement(drawingContext, element);
+                RenderElement(drawingContext, element, theme);
         }
     }
 
-    private static void RenderElement(DrawingContext drawingContext, GraphicElement element)
+    private static void RenderElement(DrawingContext drawingContext, GraphicElement element, DrawingThemeSnapshot theme)
     {
         var style = element.Style;
         var opacity = Math.Clamp(style.Opacity, 0, 1);
@@ -50,8 +50,8 @@ public static class GraphicRenderer
             drawingContext.PushTransform(transform);
         drawingContext.PushOpacity(opacity);
 
-        var fill = CreateBrush(style.Fill);
-        var pen = CreatePen(style.Stroke, style.StrokeWidth);
+        var fill = CreateBrush(style.Fill, style.FillToken, theme);
+        var pen = CreatePen(style.Stroke, style.StrokeToken, style.StrokeWidth, theme);
         switch (element.Kind)
         {
             case GraphicElementKind.Rectangle:
@@ -149,8 +149,12 @@ public static class GraphicRenderer
         drawingContext.DrawText(formatted, new Point(bounds.X, bounds.Y));
     }
 
-    private static SolidColorBrush? CreateBrush(GraphicColor color)
+    private static Brush? CreateBrush(GraphicColor color, string? token, DrawingThemeSnapshot theme)
     {
+        var tokenBrush = theme.GetTokenBrush(token);
+        if (tokenBrush is not null)
+            return tokenBrush;
+
         if (color.A == 0)
             return null;
 
@@ -159,12 +163,12 @@ public static class GraphicRenderer
         return brush;
     }
 
-    private static Pen? CreatePen(GraphicColor color, double width)
+    private static Pen? CreatePen(GraphicColor color, string? token, double width, DrawingThemeSnapshot theme)
     {
         if (color.A == 0 || width <= 0 || double.IsNaN(width) || double.IsInfinity(width))
             return null;
 
-        var brush = CreateBrush(color);
+        var brush = CreateBrush(color, token, theme);
         if (brush is null)
             return null;
         var pen = new Pen(brush, width);
