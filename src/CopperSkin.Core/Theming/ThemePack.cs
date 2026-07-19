@@ -69,5 +69,5 @@ public sealed class ThemePack
     /// <summary>
     /// Gets or sets the semantic version of the theme pack.
     /// </summary>
-    public string Version { get; set; } = "0.2.0.0";
+    public string Version { get; set; } = "0.3.0.0";
 }

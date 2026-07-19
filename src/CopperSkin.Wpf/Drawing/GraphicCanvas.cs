@@ -12,13 +12,13 @@ public class GraphicCanvas : FrameworkElement, IThemeAwareDrawingSurface
     /// Identifies the Document dependency property.
     /// </summary>
     public static readonly DependencyProperty DocumentProperty = DependencyProperty.Register(
-        nameof(Document), typeof(GraphicDocument), typeof(GraphicCanvas), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+        nameof(Document), typeof(GraphicDocument), typeof(GraphicCanvas), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
     /// <summary>
     /// Identifies the Zoom dependency property.
     /// </summary>
     public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
-        nameof(Zoom), typeof(double), typeof(GraphicCanvas), new FrameworkPropertyMetadata(1d, FrameworkPropertyMetadataOptions.AffectsRender));
+        nameof(Zoom), typeof(double), typeof(GraphicCanvas), new FrameworkPropertyMetadata(1d, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
     private DrawingThemeSnapshot _theme = DrawingThemeSnapshot.Default;
 
@@ -56,6 +56,19 @@ public class GraphicCanvas : FrameworkElement, IThemeAwareDrawingSurface
     {
         _theme = theme ?? throw new ArgumentNullException(nameof(theme));
         InvalidateVisual();
+    }
+
+    /// <summary>
+    /// Reports the zoomed document extent so a parent <see cref="System.Windows.Controls.ScrollViewer"/> can scroll the whole canvas.
+    /// </summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var document = Document;
+        if (document is null)
+            return base.MeasureOverride(availableSize);
+
+        var zoom = double.IsFinite(Zoom) && Zoom > 0 ? Zoom : 1;
+        return new Size(Math.Max(0, document.Width * zoom), Math.Max(0, document.Height * zoom));
     }
 
     /// <summary>

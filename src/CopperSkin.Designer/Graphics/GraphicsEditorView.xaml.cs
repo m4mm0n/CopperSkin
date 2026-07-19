@@ -18,6 +18,9 @@ public partial class GraphicsEditorView : UserControl
     private readonly ObservableCollection<GraphicLayer> _layers = new();
     private readonly List<GraphicPoint> _stroke = new();
     private Point? _dragStart;
+    private string? _selectedElementId;
+    private string? _selectedLayerId;
+    private bool _draggingSelection;
     private GraphicsEditorTool _tool = GraphicsEditorTool.Select;
 
     /// <summary>
@@ -78,7 +81,19 @@ public partial class GraphicsEditorView : UserControl
         if (_tool == GraphicsEditorTool.Select)
         {
             var hit = GraphicHitTester.HitTest(Document, point);
-            StatusText.Text = hit is null ? "Nothing selected." : $"Selected {hit.ElementId}.";
+            _selectedElementId = hit?.ElementId;
+            _selectedLayerId = hit?.LayerId;
+            if (hit is null)
+            {
+                StatusText.Text = "Nothing selected.";
+                return;
+            }
+
+            _dragStart = point;
+            _draggingSelection = true;
+            GraphicSurface.CaptureMouse();
+            StatusText.Text = $"Selected {hit.ElementId}. Drag to move.";
+            e.Handled = true;
             return;
         }
 
@@ -108,11 +123,32 @@ public partial class GraphicsEditorView : UserControl
         var start = _dragStart.Value;
         _dragStart = null;
         GraphicSurface.ReleaseMouseCapture();
+
+        if (_draggingSelection)
+        {
+            _draggingSelection = false;
+            if (_selectedElementId is not null && _selectedLayerId is not null)
+            {
+                var selected = FindElement(_selectedLayerId, _selectedElementId);
+                var delta = new Vector(end.X - start.X, end.Y - start.Y);
+                if (selected is not null && delta.Length > 0.01)
+                {
+                    _history.Record(Document);
+                    Translate(selected, delta);
+                    GraphicSurface.InvalidateVisual();
+                    StatusText.Text = $"Moved {selected.Id}.";
+                }
+            }
+            return;
+        }
+
         var element = CreateElement(start, end);
         if (element is null)
             return;
 
-        var layer = Document.Layers.FirstOrDefault() ?? AddLayer();
+        var layer = SelectedLayer is { IsLocked: false } selectedLayer
+            ? selectedLayer
+            : Document.Layers.FirstOrDefault(candidate => !candidate.IsLocked) ?? AddLayer();
         _history.Record(Document);
         layer.Elements.Add(element);
         LayerList.Items.Refresh();
@@ -163,6 +199,30 @@ public partial class GraphicsEditorView : UserControl
         Document.Layers.Add(layer);
         _layers.Add(layer);
         return layer;
+    }
+
+    private GraphicElement? FindElement(string layerId, string elementId) =>
+        Document.Layers.FirstOrDefault(layer => layer.Id == layerId)?.Elements.FirstOrDefault(element => element.Id == elementId);
+
+    private static void Translate(GraphicElement element, Vector delta)
+    {
+        element.Geometry.Bounds = new GraphicRect(
+            element.Geometry.Bounds.X + delta.X,
+            element.Geometry.Bounds.Y + delta.Y,
+            element.Geometry.Bounds.Width,
+            element.Geometry.Bounds.Height);
+        element.Geometry.Points = element.Geometry.Points
+            .Select(point => new GraphicPoint(point.X + delta.X, point.Y + delta.Y))
+            .ToList();
+        element.Geometry.Path = element.Geometry.Path
+            .Select(command => new GraphicPathCommand
+            {
+                Kind = command.Kind,
+                Point1 = new GraphicPoint(command.Point1.X + delta.X, command.Point1.Y + delta.Y),
+                Point2 = new GraphicPoint(command.Point2.X + delta.X, command.Point2.Y + delta.Y),
+                Point3 = new GraphicPoint(command.Point3.X + delta.X, command.Point3.Y + delta.Y)
+            })
+            .ToList();
     }
 
     private GraphicLayer? SelectedLayer => LayerList.SelectedItem as GraphicLayer;

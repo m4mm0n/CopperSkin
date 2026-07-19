@@ -30,6 +30,15 @@ The runtime resource dictionary includes implicit styles for:
 
 Panels such as `Grid`, `StackPanel`, `DockPanel`, `Canvas`, `WrapPanel`, `UniformGrid`, and `VirtualizingStackPanel` are layout primitives rather than lookful controls. CopperSkin skins their child controls, borders, scrollbars, splitters, and owner shells while leaving layout measurement behavior untouched.
 
+## v0.3 support status
+
+| Status | Surfaces | Contract |
+| --- | --- | --- |
+| First-class | `CopperWindow`, dialogs, `GraphicCanvas`, `CopperIcon`, buttons, text input, lists, menus, scrollbars, tabs, toolbars, status, and common document surfaces | CopperSkin owns visual resources and regression tests cover resource loading plus core interaction state. |
+| Safe defaults | `BulletDecorator`, `Image`, `InkPresenter`, `MediaElement` | Framework-owned behavior remains intact; CopperSkin supplies layout, pixel, stretch, and media lifecycle defaults. |
+| Partial by design | `DataGrid`, `RichTextBox`, `DatePicker`, `Calendar`, `FlowDocument*`, `Frame`, popup-heavy controls | Styles and state resources are supplied, but application-specific validation, navigation, hosted content, and framework-version behavior remain WPF-owned. |
+| Excluded | `WebBrowser`, externally hosted visual trees, OS-owned media pipelines | A resource key alone must not be interpreted as full custom replacement. |
+
 ## Extension Points
 
 Applications can register custom drawing surfaces through `DrawingThemeRegistry`. Registered surfaces receive frozen brush snapshots every time the active theme changes.
