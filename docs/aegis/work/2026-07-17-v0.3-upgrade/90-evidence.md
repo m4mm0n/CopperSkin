@@ -38,3 +38,4 @@ Current evidence:
 - Package rehearsal: `CopperSkin.Core.0.3.0.nupkg` and `CopperSkin.Wpf.0.3.0.nupkg` contain README.md, LICENSE, all target-framework DLLs, and XML documentation; nuspec metadata contains MIT license and repository URL.
 - Public documentation scan: no AI/tool attribution wording found in README, release docs, contributing/security docs, or user-facing docs; stale `0.2.0.0` references are limited to historical changelog entries, a legacy compatibility test, and the historical plan rationale.
 - Architecture decision and baseline sync: `docs/aegis/adr/ADR-0001-v0.3-graphics-boundary.md` and `docs/aegis/BASELINE-GOVERNANCE.md` updated.
+- Clean-checkout rehearsal from pushed commit `2c7f712`: restore, Release build, full solution tests, package creation, package metadata inspection, and built-in theme validation all passed.
