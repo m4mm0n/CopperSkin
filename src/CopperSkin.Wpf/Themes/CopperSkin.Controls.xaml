@@ -72,6 +72,19 @@
   <DropShadowEffect x:Key="CopperSkin.PanelShadow" BlurRadius="18" ShadowDepth="1" Opacity="0.34" Color="#FF000000"/>
   <DropShadowEffect x:Key="CopperSkin.NeonGlow" BlurRadius="16" ShadowDepth="0" Opacity="0.58" Color="#FFFFA1F7"/>
 
+  <Style x:Key="CopperSkin.FocusVisualStyle" TargetType="Control">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Control">
+          <Border BorderBrush="{DynamicResource color.focus.ring}"
+                  BorderThickness="2"
+                  CornerRadius="3"
+                  SnapsToDevicePixels="True"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style TargetType="{x:Type Window}">
     <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
@@ -565,7 +578,7 @@
     <Setter Property="Padding" Value="3,2"/>
     <Setter Property="MinHeight" Value="24"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
-    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type TreeViewItem}">
@@ -1273,6 +1286,30 @@
 
   <Style TargetType="{x:Type ToolBarTray}">
     <Setter Property="Background" Value="{DynamicResource CopperSkin.ChromeBrush}"/>
+  </Style>
+
+  <!-- v0.3 primitive/media coverage: these framework-owned surfaces receive safe defaults, not custom-hosted behavior. -->
+  <Style TargetType="{x:Type BulletDecorator}">
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type Image}">
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type InkPresenter}">
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="UseLayoutRounding" Value="True"/>
+  </Style>
+
+  <Style TargetType="{x:Type MediaElement}">
+    <Setter Property="LoadedBehavior" Value="Manual"/>
+    <Setter Property="UnloadedBehavior" Value="Stop"/>
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
   </Style>
 
 </ResourceDictionary>

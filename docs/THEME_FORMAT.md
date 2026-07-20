@@ -7,10 +7,10 @@ CopperSkin themes are token packs. The JSON format is intentionally simple so it
 ```json
 {
   "name": "CopperSkin Built-ins",
-  "version": "0.2.0.0",
+  "version": "0.3.0.0",
   "metadata": {
     "author": "ZeroLinez Softworx",
-    "compatibility.copperskin": "0.2.0.0",
+    "compatibility.copperskin": "0.3.0.0",
     "signature.algorithm": "ECDSA-GF2M-B233-SHA256",
     "signature.curve": "NIST-B-233",
     "signature.signer": "CopperSkin",

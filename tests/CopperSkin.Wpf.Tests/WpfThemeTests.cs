@@ -124,6 +124,52 @@ public sealed class WpfThemeTests
         });
     }
 
+    /// <summary>
+    /// Verifies the first v0.3 primitive and media control coverage wave is available in the public resource scope.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesCoverV03PrimitiveAndMediaControls()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            Assert.IsType<Style>(resources[typeof(BulletDecorator)]);
+            Assert.IsType<Style>(resources[typeof(Image)]);
+            Assert.IsType<Style>(resources[typeof(InkPresenter)]);
+            Assert.IsType<Style>(resources[typeof(MediaElement)]);
+        });
+    }
+
+    /// <summary>
+    /// Verifies the v0.3 interaction surfaces retain their standard WPF templates and keyboard state.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesApplyToInteractionControlWave()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            var richTextBox = new RichTextBox { Style = (Style)resources[typeof(RichTextBox)], IsReadOnly = true };
+            var datePicker = new DatePicker { Style = (Style)resources[typeof(DatePicker)], IsTodayHighlighted = true };
+            var dataGrid = new DataGrid { Style = (Style)resources[typeof(DataGrid)], CanUserAddRows = false };
+            var tabControl = new TabControl { Style = (Style)resources[typeof(TabControl)] };
+            var toolbarOverflow = new ToolBarOverflowPanel { Style = (Style)resources[typeof(ToolBarOverflowPanel)] };
+            var treeItem = new TreeViewItem { Style = (Style)resources[typeof(TreeViewItem)] };
+
+            Assert.True(richTextBox.IsReadOnly);
+            Assert.True(datePicker.IsTodayHighlighted);
+            Assert.False(dataGrid.CanUserAddRows);
+            Assert.True(richTextBox.ApplyTemplate());
+            Assert.NotNull(datePicker.Style);
+            Assert.NotNull(dataGrid.Style);
+            Assert.NotNull(tabControl.Style);
+            Assert.NotNull(toolbarOverflow.Style);
+            Assert.NotNull(treeItem.FocusVisualStyle);
+        });
+    }
+
     private static void RunOnSta(Action action)
     {
         Exception? exception = null;
