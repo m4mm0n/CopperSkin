@@ -22,6 +22,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using CopperSkin.Core.Graphics;
 
 namespace CopperSkin.Core.Theming;
 
@@ -82,6 +83,9 @@ public static class ThemePackSigner
             foreach (var pair in theme.Tokens.OrderBy(static p => p.Key, StringComparer.OrdinalIgnoreCase))
                 builder.Append("token|").Append(pair.Key).Append('|').Append(pair.Value).AppendLine();
         }
+
+        foreach (var graphic in (pack.Graphics ?? []).OrderBy(static g => g.Id, StringComparer.Ordinal))
+            builder.Append("graphic|").Append(GraphicDocumentSerializer.Serialize(graphic)).AppendLine();
 
         return builder.ToString();
     }

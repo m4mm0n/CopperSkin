@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added the v0.3 Core graphics document model with versioned JSON serialization, validation, pack persistence, and signature participation.
+- Added shared WPF GraphicCanvas, CopperIcon, renderer, and document-space hit testing.
+- Added a Designer Graphics tab with icon/paint presets, rectangle/ellipse/line/freehand tools, save/open, zoom, and snapshot undo/redo.
+- Added initial v0.3 safe default styling for BulletDecorator, Image, InkPresenter, and MediaElement.
 - Added `CopperSkinThemeResources`, a XAML-loadable resource dictionary that lets host apps and Visual Studio designer surfaces render CopperSkin styling before runtime startup executes.
 - Added no-dependency B-233 binary-field ECDSA theme-pack signing, key generation, and trusted-public-key verification.
 - Added broader implicit WPF standard-control coverage for shell, item, text/document, popup, data-grid, toolbar, resize, and document primitives.
@@ -17,6 +21,21 @@
 - Corrected horizontal scrollbar track direction so thumb movement and left/right commands agree.
 - Fixed Designer collection updates to use supported `ObservableCollection` operations.
 - Fixed static initialization ordering for the token catalog and B-233 base point; release signing no longer produces an all-zero public key or loops on zero signature coordinates.
+
+## v0.3.0.0 - 2026-07-19
+
+### Added
+
+- Added the first public-release graphics document contract for vector-first icons and basic painting.
+- Added the Designer Graphics tab with presets, shape/freehand tools, layers, history, save/open, zoom, and deterministic SVG/XAML/PNG export.
+- Added runtime `GraphicCanvas` and `CopperIcon` surfaces with theme-token fill/stroke resolution.
+- Added a Windows CI workflow, package metadata, MIT license, security policy, contribution guide, and release checklist.
+
+### Changed
+
+- Bumped assembly, package, built-in theme-pack, and compatibility metadata to `0.3.0.0`.
+- Enabled warnings-as-errors for the release build.
+- Documented control behavior, accessibility expectations, graphics file format, and clean-checkout release gates.
 
 ## v0.2.0.0 - 2026-06-04
 

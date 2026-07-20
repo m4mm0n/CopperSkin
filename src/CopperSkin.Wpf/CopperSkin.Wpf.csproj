@@ -31,14 +31,19 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <PackageId>CopperSkin.Wpf</PackageId>
-    <Version>0.2.0.0</Version>
+    <Version>0.3.0.0</Version>
     <Authors>ZeroLinez Softworx</Authors>
     <Description>Runtime WPF theme engine, custom control styles, custom window chrome, and CopperSkin dialogs.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/m4mm0n/CopperSkin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/m4mm0n/CopperSkin</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

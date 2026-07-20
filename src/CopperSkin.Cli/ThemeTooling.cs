@@ -49,7 +49,7 @@ internal static class ThemeTooling
             Metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["author"] = "Your Team",
-                ["compatibility.copperskin"] = "0.2.0.0"
+                ["compatibility.copperskin"] = "0.3.0.0"
             },
             Themes =
             [

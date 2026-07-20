@@ -1,0 +1,73 @@
+<UserControl x:Class="CopperSkin.Designer.Graphics.GraphicsEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:drawing="clr-namespace:CopperSkin.Wpf.Drawing;assembly=CopperSkin.Wpf">
+  <Grid Margin="8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <ToolBarTray Grid.Row="0" Margin="0,0,0,8">
+      <ToolBar>
+        <Button Content="New icon" Click="NewIcon_Click" ToolTip="Create a 64 by 64 transparent icon"/>
+        <Button Content="New paint" Click="NewPaint_Click" ToolTip="Create a 640 by 480 paint canvas"/>
+        <Separator/>
+        <Button Content="Select" Tag="Select" Click="Tool_Click"/>
+        <Button Content="Rectangle" Tag="Rectangle" Click="Tool_Click"/>
+        <Button Content="Ellipse" Tag="Ellipse" Click="Tool_Click"/>
+        <Button Content="Line" Tag="Line" Click="Tool_Click"/>
+        <Button Content="Freehand" Tag="Freehand" Click="Tool_Click"/>
+        <Separator/>
+        <Button Content="Undo" Click="Undo_Click"/>
+        <Button Content="Redo" Click="Redo_Click"/>
+        <Separator/>
+        <Button Content="Open" Click="Open_Click"/>
+        <Button Content="Save" Click="Save_Click"/>
+        <Button Content="SVG" Click="ExportSvg_Click"/>
+        <Button Content="XAML" Click="ExportXaml_Click"/>
+        <Button Content="PNG" Click="ExportPng_Click"/>
+        <Separator/>
+        <Button Content="Zoom −" Click="ZoomOut_Click"/>
+        <Button Content="Zoom +" Click="ZoomIn_Click"/>
+      </ToolBar>
+    </ToolBarTray>
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="190"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="190"/>
+      </Grid.ColumnDefinitions>
+      <Border Grid.Column="0" Style="{StaticResource CopperSkin.PanelBorder}" Margin="0,0,8,0" Padding="8">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Layers" Style="{StaticResource CopperSkin.SectionTitle}"/>
+          <WrapPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <Button Content="+" Width="30" Click="AddLayer_Click" ToolTip="Add layer"/>
+            <Button Content="−" Width="30" Margin="4,0,0,0" Click="RemoveLayer_Click" ToolTip="Remove selected layer"/>
+            <Button Content="↑" Width="30" Margin="4,0,0,0" Click="MoveLayerUp_Click" ToolTip="Move selected layer up"/>
+            <Button Content="↓" Width="30" Margin="4,0,0,0" Click="MoveLayerDown_Click" ToolTip="Move selected layer down"/>
+            <Button Content="Vis" Margin="4,0,0,0" Click="ToggleLayerVisibility_Click" ToolTip="Toggle selected layer visibility"/>
+            <Button Content="Lock" Margin="4,0,0,0" Click="ToggleLayerLock_Click" ToolTip="Toggle selected layer lock"/>
+          </WrapPanel>
+          <ListBox x:Name="LayerList" DisplayMemberPath="Name"/>
+        </DockPanel>
+      </Border>
+      <Border Grid.Column="1" BorderBrush="{DynamicResource color.border.default}" BorderThickness="1" Background="{DynamicResource color.surface.deep}" ClipToBounds="True">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+          <drawing:GraphicCanvas x:Name="GraphicSurface" MinWidth="320" MinHeight="240" MouseLeftButtonDown="GraphicSurface_MouseLeftButtonDown" MouseMove="GraphicSurface_MouseMove" MouseLeftButtonUp="GraphicSurface_MouseLeftButtonUp"/>
+        </ScrollViewer>
+      </Border>
+      <Border Grid.Column="2" Style="{StaticResource CopperSkin.PanelBorder}" Margin="8,0,0,0" Padding="8">
+        <StackPanel>
+          <TextBlock Text="Document" Style="{StaticResource CopperSkin.SectionTitle}"/>
+          <TextBlock x:Name="DocumentNameText" Foreground="{DynamicResource color.text.primary}" TextWrapping="Wrap"/>
+          <TextBlock x:Name="DocumentSizeText" Foreground="{DynamicResource color.text.secondary}" Margin="0,4,0,12"/>
+          <TextBlock Text="Active tool" Foreground="{DynamicResource color.text.secondary}"/>
+          <TextBlock x:Name="ToolText" FontWeight="SemiBold" Margin="0,2,0,12"/>
+          <TextBlock Text="Canvas edits are stored as Core graphics documents. Use Save to persist the current document." Foreground="{DynamicResource color.text.secondary}" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+    <TextBlock Grid.Row="2" x:Name="StatusText" Foreground="{DynamicResource color.text.secondary}" Margin="0,8,0,0"/>
+  </Grid>
+</UserControl>

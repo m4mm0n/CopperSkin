@@ -9,6 +9,8 @@ CopperSkin is a reusable WPF theme platform for applications that need runtime t
 
 ![CopperSkin architecture](docs/assets/copperskin-architecture.svg)
 
+Version `0.3.0.0` adds a vector-first icon and basic-paint editor, shared runtime graphics surfaces, deterministic export, and a broader documented WPF control surface.
+
 ## What is included
 
 | Project | Purpose | Target frameworks |
@@ -16,12 +18,12 @@ CopperSkin is a reusable WPF theme platform for applications that need runtime t
 | `CopperSkin.Core` | Typed theme model, validation, JSON, archives, signing, and audits | `netstandard2.0`, `net7.0`, `net8.0`, `net9.0`, `net10.0` |
 | `CopperSkin.Wpf` | Runtime resources, implicit styles, scoped themes, chrome, and dialogs | `net7.0-windows`, `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
 | `CopperSkin.Cli` | Theme export, validation, galleries, baselines, diffs, signing, and packaging | `net8.0`, `net9.0`, `net10.0` |
-| `CopperSkin.Designer` | Live theme preview, token editing, diagnostics, and export | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
+| `CopperSkin.Designer` | Live theme preview, token editing, graphics authoring, diagnostics, and export | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
 | `CopperSkin.SampleKitchenSink` | Runnable visual reference application | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
 
 ## Quick start
 
-Install the `CopperSkin.Core` and `CopperSkin.Wpf` packages, then install the runtime during application startup:
+Install the `CopperSkin.Core` and `CopperSkin.Wpf` `0.3.0` NuGet packages (assembly version `0.3.0.0`), then install the runtime during application startup:
 
 ```csharp
 using CopperSkin.Core.Theming;
@@ -87,6 +89,70 @@ new CopperTaskDialog
 }.Show(this);
 ```
 
+## Graphics editor and runtime icons
+
+The Designer's **Graphics** tab creates icon or paint documents with layers, visibility/lock controls, rectangle/ellipse/line/freehand tools, zoom, undo/redo, save/open, and SVG/XAML/PNG export.
+
+![CopperSkin graphics editor workflow](docs/assets/copperskin-graphics-editor.svg)
+
+The file format is renderer-neutral and can be validated in a build pipeline:
+
+```csharp
+using CopperSkin.Core.Graphics;
+
+var icon = new GraphicDocument
+{
+    Id = "status.ok",
+    Name = "Status OK",
+    DocumentType = GraphicDocumentType.Icon,
+    Width = 24,
+    Height = 24,
+    Layers =
+    [
+        new GraphicLayer
+        {
+            Id = "mark",
+            Name = "Mark",
+            Elements =
+            [
+                new GraphicElement
+                {
+                    Id = "circle",
+                    Kind = GraphicElementKind.Ellipse,
+                    Geometry = new GraphicGeometry { Bounds = new GraphicRect(2, 2, 20, 20) },
+                    Style = new GraphicStyle { FillToken = "color.status.success" }
+                }
+            ]
+        }
+    ]
+};
+
+var json = GraphicDocumentSerializer.Serialize(icon);
+var diagnostics = GraphicDocumentValidator.Validate(icon);
+```
+
+Render the same document in an application without duplicating the editor:
+
+```xml
+<copper:CopperIcon Document="{Binding StatusIcon}"
+                   AccessibleName="Success"
+                   Width="24"
+                   Height="24" />
+```
+
+Declare `xmlns:copper="clr-namespace:CopperSkin.Wpf.Controls;assembly=CopperSkin.Wpf"` for the runtime control.
+
+For headless validation and canonical JSON export:
+
+```powershell
+$cli = ".\src\CopperSkin.Cli\CopperSkin.Cli.csproj"
+dotnet run --project $cli -c Release -f net10.0 -- graphics validate .\status.ok.cgraphic
+dotnet run --project $cli -c Release -f net10.0 -- graphics inspect .\status.ok.cgraphic
+dotnet run --project $cli -c Release -f net10.0 -- graphics export .\status.ok.cgraphic .\artifacts\status.ok.json
+```
+
+WPF SVG, XAML, and PNG export is available through `GraphicExportService`; Core-only CLI export intentionally remains renderer-free.
+
 ## Tools
 
 Run the Designer:
@@ -128,16 +194,20 @@ The verification matrix covers Core, CLI, WPF, and visual smoke tests on the sup
 
 ## Documentation
 
+- [Getting started](docs/GETTING_STARTED.md)
+- [Graphics format](docs/GRAPHICS_FORMAT.md)
+- [Accessibility and control behavior](docs/ACCESSIBILITY.md)
 - [Theme format](docs/THEME_FORMAT.md)
 - [Control coverage](docs/CONTROL_COVERAGE.md)
+- [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Deployment plan](docs/aegis/plans/2026-07-16-library-deployment.md)
 - [Release notes](RELEASE_NOTES.md)
 - [Changelog](CHANGELOG.md)
 
 ## Project status
 
-The source tree currently builds without warnings and the automated test suites pass. The remaining deployment work is repository and release infrastructure: connect a Git remote, add CI and package-publishing policy, add the public license/security files, rehearse a clean checkout, and publish signed packages from protected credentials. See the [deployment plan](docs/aegis/plans/2026-07-16-library-deployment.md) for the ordered release path.
+`0.3.0.0` is the first public-release line. The branch is verified by the Windows CI workflow with warnings treated as errors, the full multi-target test matrix, and Core/WPF package validation. Publishing to NuGet is tag- and secret-gated; see the [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## License
 
-CopperSkin is intended to be released under the MIT license. Add the repository's canonical `LICENSE` file before publishing the first public tag.
+CopperSkin is released under the [MIT License](LICENSE).

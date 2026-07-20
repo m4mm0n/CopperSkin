@@ -19,6 +19,9 @@
  * ====================================================================================================
  */
 // CRC32-BODY: 30E611E2
+using System.Text.Json.Serialization;
+using CopperSkin.Core.Graphics;
+
 namespace CopperSkin.Core.Theming;
 
 /// <summary>
@@ -48,6 +51,12 @@ public sealed class ThemePack
     public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Gets or sets optional icon and basic-paint documents embedded in the pack.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<GraphicDocument>? Graphics { get; set; }
+
+    /// <summary>
     /// Gets or sets the display name for the theme pack.
     /// </summary>
     public string Name { get; set; } = "CopperSkin";
@@ -60,5 +69,5 @@ public sealed class ThemePack
     /// <summary>
     /// Gets or sets the semantic version of the theme pack.
     /// </summary>
-    public string Version { get; set; } = "0.2.0.0";
+    public string Version { get; set; } = "0.3.0.0";
 }
