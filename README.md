@@ -44,6 +44,9 @@ dotnet add package CopperSkin.Core --version 0.3.0
 dotnet add package CopperSkin.Wpf --version 0.3.0
 ```
 
+`CopperSkin.Core`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Core/0.3.0) ·
+`CopperSkin.Wpf`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0)
+
 `CopperSkin.Core` is renderer-neutral and can be used by services, build tools, and theme-pack pipelines. `CopperSkin.Wpf` adds the WPF resource dictionaries and controls.
 
 ## First application
@@ -284,8 +287,8 @@ The Windows CI workflow runs the same restore, warnings-as-errors build, multi-t
 
 | Package | Use it when |
 | --- | --- |
-| `CopperSkin.Core` | You need theme models, validation, serialization, signatures, or graphics documents without WPF. |
-| `CopperSkin.Wpf` | You need WPF resources, controls, window chrome, dialogs, or graphics rendering. |
+| [`CopperSkin.Core`](https://www.nuget.org/packages/CopperSkin.Core/0.3.0) | You need theme models, validation, serialization, signatures, or graphics documents without WPF. |
+| [`CopperSkin.Wpf`](https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0) | You need WPF resources, controls, window chrome, dialogs, or graphics rendering. |
 
 Package version `0.3.0` contains assembly/file version `0.3.0.0`. Existing theme packs without graphics remain readable. The graphics schema is versioned independently from the assembly version.
 
