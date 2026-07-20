@@ -278,7 +278,7 @@ dotnet pack .\src\CopperSkin.Core\CopperSkin.Core.csproj --configuration Release
 dotnet pack .\src\CopperSkin.Wpf\CopperSkin.Wpf.csproj --configuration Release --output .\artifacts\packages
 ```
 
-The Windows CI workflow runs the same restore, warnings-as-errors build, multi-target test matrix, and package checks. Release tags beginning with `v0.3.` additionally run the NuGet publishing job when the repository secret is configured.
+The Windows CI workflow runs the same restore, warnings-as-errors build, multi-target test matrix, and package checks. Release tags beginning with `v0.3.` additionally publish through NuGet Trusted Publishing using GitHub OIDC; see [NuGet publishing](docs/NUGET_PUBLISHING.md).
 
 ## Packages and compatibility
 

@@ -5,18 +5,23 @@ CopperSkin publishes two packages:
 - CopperSkin.Core — renderer-neutral theme and graphics primitives.
 - CopperSkin.Wpf — WPF resources, controls, dialogs, chrome, and graphics rendering.
 
-The project files currently produce package version 0.3.0 from assembly/file version 0.3.0.0.
+The project files produce package version 0.3.0 from assembly/file version 0.3.0.0.
 
-## One-time NuGet setup
+## Trusted Publishing setup
 
-1. Create or sign in to the NuGet.org owner account for the packages.
-2. Create an API key with push permission limited to CopperSkin.Core and CopperSkin.Wpf.
-3. Set the source to https://api.nuget.org/v3/index.json.
-4. In the GitHub repository settings, open **Secrets and variables → Actions**.
-5. Add an Actions secret named NUGET_API_KEY.
-6. Keep the key out of source control, local scripts, issue comments, and release notes.
+CopperSkin uses NuGet Trusted Publishing from GitHub Actions. This avoids storing a long-lived NuGet API key in GitHub.
 
-The workflow in .github/workflows/ci.yml publishes only when a tag beginning with v0.3. is pushed. The verification job must pass first, and duplicate uploads are ignored.
+The NuGet policies for both packages should use:
+
+- NuGet package owner: m4mm0n
+- Repository owner: m4mm0n
+- Repository: CopperSkin
+- Workflow file: ci.yml
+- Environment: leave empty
+
+NuGet expects the workflow filename only, not the .github/workflows/ path. The policy is initially active for seven days; a successful login or publish permanently activates it.
+
+The workflow requests GitHub's OIDC token, exchanges it with NuGet using NuGet/login@v1, and receives a short-lived package credential. No NUGET_API_KEY repository secret is required.
 
 ## Verify locally before tagging
 
@@ -52,18 +57,23 @@ GitHub Actions will then:
 1. Check out the exact tag.
 2. Restore, build, and test the solution.
 3. Pack both NuGet packages.
-4. Push both packages using NUGET_API_KEY.
+4. Request a short-lived NuGet credential through Trusted Publishing.
+5. Push both packages to NuGet.
 
-Monitor the workflow under the repository's **Actions** tab. Once it is green, verify the package pages:
+Monitor the workflow under the repository's **Actions** tab. Once it is green, verify:
 
 - https://www.nuget.org/packages/CopperSkin.Core/0.3.0
 - https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0
 
 NuGet indexing can take a few minutes after a successful push.
 
-## Manual publishing fallback
+## If the seven-day policy window expires
 
-Use this only when the GitHub Actions publish job is unavailable:
+Open NuGet.org → your profile → **Trusted Publishing**, edit the policy, and choose **Activate for 7 days** again. Then rerun the tag workflow. A successful OIDC login is enough to permanently activate the policy.
+
+## Manual fallback
+
+If Trusted Publishing is unavailable, use a short-lived, package-scoped NuGet API key only from a secure local environment:
 
 ~~~powershell
 $packages = Get-ChildItem .\artifacts\packages\*.nupkg
@@ -72,7 +82,7 @@ foreach ($package in $packages) {
 }
 ~~~
 
-Set NUGET_API_KEY only in the current process or an approved secret store. Do not put the value directly in the command history or a committed script.
+Never commit the key or put it in a workflow file. Trusted Publishing remains the preferred release path.
 
 ## Updating a future release
 
