@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## v0.3.0.0 - 2026-07-19
+
 ### Added
 
 - Added the v0.3 Core graphics document model with versioned JSON serialization, validation, pack persistence, and signature participation.
@@ -13,6 +17,10 @@
 - Added broader implicit WPF standard-control coverage for shell, item, text/document, popup, data-grid, toolbar, resize, and document primitives.
 - Added a richer Designer preview tab that exercises forms, collections, data grids, menus, toolbars, document content, calendar, and ink surfaces.
 - Added a Designer event log pane backed by QuickLog for theme selection, token apply, validation, export, duplicate, and dialog preview actions.
+- Added the first public-release graphics document contract for vector-first icons and basic painting.
+- Added the Designer Graphics tab with presets, shape/freehand tools, layers, history, save/open, zoom, and deterministic SVG/XAML/PNG export.
+- Added runtime `GraphicCanvas` and `CopperIcon` surfaces with theme-token fill/stroke resolution.
+- Added a Windows CI workflow, package metadata, MIT license, security policy, contribution guide, and release checklist.
 
 ### Changed
 
@@ -21,17 +29,6 @@
 - Corrected horizontal scrollbar track direction so thumb movement and left/right commands agree.
 - Fixed Designer collection updates to use supported `ObservableCollection` operations.
 - Fixed static initialization ordering for the token catalog and B-233 base point; release signing no longer produces an all-zero public key or loops on zero signature coordinates.
-
-## v0.3.0.0 - 2026-07-19
-
-### Added
-
-- Added the first public-release graphics document contract for vector-first icons and basic painting.
-- Added the Designer Graphics tab with presets, shape/freehand tools, layers, history, save/open, zoom, and deterministic SVG/XAML/PNG export.
-- Added runtime `GraphicCanvas` and `CopperIcon` surfaces with theme-token fill/stroke resolution.
-- Added a Windows CI workflow, package metadata, MIT license, security policy, contribution guide, and release checklist.
-
-### Changed
 
 - Bumped assembly, package, built-in theme-pack, and compatibility metadata to `0.3.0.0`.
 - Enabled warnings-as-errors for the release build.
