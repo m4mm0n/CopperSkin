@@ -1,3 +1,16 @@
+# CopperSkin 0.3.1.0
+
+Documentation patch release for the first public release.
+
+- NuGet packages are version `0.3.1`.
+- NuGet package pages now use a package-specific README with absolute documentation links.
+- The repository README links directly to the current NuGet package pages.
+- Assembly, file, and theme compatibility versions remain `0.3.0.0`.
+
+See the [0.3.0.0 release notes](https://github.com/m4mm0n/CopperSkin/blob/main/RELEASE_NOTES.md) for the complete feature release details.
+
+---
+
 # CopperSkin 0.3.0.0
 
 First official public release of the reusable CopperSkin engine, designer, CLI, sample app, and release packages.

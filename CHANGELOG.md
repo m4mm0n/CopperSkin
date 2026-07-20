@@ -4,6 +4,14 @@
 
 No unreleased changes.
 
+## v0.3.1.0 - 2026-07-20
+
+### Fixed
+
+- Replaced the NuGet package README with a package-safe guide using absolute repository documentation links.
+- Added direct, version-independent NuGet package links to the repository README.
+- Published the documentation correction as package version `0.3.1`; the assembly and compatibility version remain `0.3.0.0`.
+
 ## v0.3.0.0 - 2026-07-19
 
 ### Added

@@ -5,7 +5,7 @@ CopperSkin publishes two packages:
 - CopperSkin.Core — renderer-neutral theme and graphics primitives.
 - CopperSkin.Wpf — WPF resources, controls, dialogs, chrome, and graphics rendering.
 
-The project files produce package version 0.3.0 from assembly/file version 0.3.0.0.
+The project files produce package version 0.3.1 from assembly/file version 0.3.0.0. The patch version exists because NuGet package versions are immutable; it carries the corrected package README without changing the assembly compatibility version.
 
 ## Trusted Publishing setup
 
@@ -39,7 +39,7 @@ dotnet pack .\src\CopperSkin.Wpf\CopperSkin.Wpf.csproj --configuration Release -
 Get-ChildItem .\artifacts\packages\*.nupkg
 ~~~
 
-Confirm that both packages are present, have version 0.3.0, and contain README.md, LICENSE, XML documentation, and the expected repository URL.
+Confirm that both packages are present, have version 0.3.1, and contain the package-specific README.md, LICENSE, XML documentation, and the expected repository URL.
 
 ## Tag-driven publishing
 
@@ -48,8 +48,8 @@ After the release commit is on main:
 ~~~powershell
 git switch main
 git pull --ff-only origin main
-git tag -a v0.3.0.0 -m "CopperSkin 0.3.0.0"
-git push origin v0.3.0.0
+git tag -a v0.3.1.0 -m "CopperSkin 0.3.1.0"
+git push origin v0.3.1.0
 ~~~
 
 GitHub Actions will then:
@@ -62,8 +62,8 @@ GitHub Actions will then:
 
 Monitor the workflow under the repository's **Actions** tab. Once it is green, verify:
 
-- https://www.nuget.org/packages/CopperSkin.Core/0.3.0
-- https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0
+- https://www.nuget.org/packages/CopperSkin.Core/0.3.1
+- https://www.nuget.org/packages/CopperSkin.Wpf/0.3.1
 
 NuGet indexing can take a few minutes after a successful push.
 

@@ -2,7 +2,7 @@
 
 ## Runtime application
 
-Install the `CopperSkin.Core` and `CopperSkin.Wpf` `0.3.0` NuGet packages (assembly version `0.3.0.0`). Merge `CopperSkinThemeResources` into application resources, then call `CopperSkinApp.Use(Application.Current)` during startup. The [README](../README.md) contains the smallest complete startup and `CopperWindow` examples.
+Install the `CopperSkin.Core` and `CopperSkin.Wpf` `0.3.1` NuGet packages (assembly version `0.3.0.0`). Merge `CopperSkinThemeResources` into application resources, then call `CopperSkinApp.Use(Application.Current)` during startup. The [README](../README.md) contains the smallest complete startup and `CopperWindow` examples.
 
 ## Create a graphic
 

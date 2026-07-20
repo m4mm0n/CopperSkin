@@ -4,11 +4,11 @@
 
 ![Build](https://img.shields.io/badge/build-.NET%208%20%7C%209%20%7C%2010-512bd4)
 ![License](https://img.shields.io/badge/license-MIT-2ea44f)
-![Release](https://img.shields.io/badge/release-0.3.0-2ea44f)
+![Release](https://img.shields.io/badge/release-0.3.1-2ea44f)
 
 CopperSkin is a reusable WPF theming platform for desktop applications that need runtime theme switching, consistent standard-control styling, custom window chrome, scoped themes, icon authoring, portable theme packs, and deterministic validation.
 
-The `0.3.0` release is the first public release. It includes the reusable Core and WPF libraries, the Designer, command-line tooling, the sample application, the graphics document format, and the release pipeline.
+The `0.3.0` release is the first public release. The `0.3.1` patch refreshes the NuGet package documentation and keeps package links current. Together they include the reusable Core and WPF libraries, the Designer, command-line tooling, the sample application, the graphics document format, and the release pipeline.
 
 ![CopperSkin architecture](https://raw.githubusercontent.com/m4mm0n/CopperSkin/main/docs/assets/copperskin-architecture.svg)
 
@@ -40,12 +40,12 @@ The `0.3.0` release is the first public release. It includes the reusable Core a
 For a WPF application, install both runtime packages:
 
 ```powershell
-dotnet add package CopperSkin.Core --version 0.3.0
-dotnet add package CopperSkin.Wpf --version 0.3.0
+dotnet add package CopperSkin.Core --version 0.3.1
+dotnet add package CopperSkin.Wpf --version 0.3.1
 ```
 
-`CopperSkin.Core`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Core/0.3.0) ·
-`CopperSkin.Wpf`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0)
+`CopperSkin.Core`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Core) ·
+`CopperSkin.Wpf`: [NuGet package](https://www.nuget.org/packages/CopperSkin.Wpf)
 
 `CopperSkin.Core` is renderer-neutral and can be used by services, build tools, and theme-pack pipelines. `CopperSkin.Wpf` adds the WPF resource dictionaries and controls.
 
@@ -287,10 +287,10 @@ The Windows CI workflow runs the same restore, warnings-as-errors build, multi-t
 
 | Package | Use it when |
 | --- | --- |
-| [`CopperSkin.Core`](https://www.nuget.org/packages/CopperSkin.Core/0.3.0) | You need theme models, validation, serialization, signatures, or graphics documents without WPF. |
-| [`CopperSkin.Wpf`](https://www.nuget.org/packages/CopperSkin.Wpf/0.3.0) | You need WPF resources, controls, window chrome, dialogs, or graphics rendering. |
+| [`CopperSkin.Core`](https://www.nuget.org/packages/CopperSkin.Core) | You need theme models, validation, serialization, signatures, or graphics documents without WPF. |
+| [`CopperSkin.Wpf`](https://www.nuget.org/packages/CopperSkin.Wpf) | You need WPF resources, controls, window chrome, dialogs, or graphics rendering. |
 
-Package version `0.3.0` contains assembly/file version `0.3.0.0`. Existing theme packs without graphics remain readable. The graphics schema is versioned independently from the assembly version.
+Package version `0.3.1` contains assembly/file version `0.3.0.0`. Existing theme packs without graphics remain readable. The graphics schema is versioned independently from the assembly version.
 
 ## Documentation
 
