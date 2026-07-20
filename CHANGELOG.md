@@ -21,6 +21,7 @@ No unreleased changes.
 - Added the Designer Graphics tab with presets, shape/freehand tools, layers, history, save/open, zoom, and deterministic SVG/XAML/PNG export.
 - Added runtime `GraphicCanvas` and `CopperIcon` surfaces with theme-token fill/stroke resolution.
 - Added a Windows CI workflow, package metadata, MIT license, security policy, contribution guide, and release checklist.
+- Added behavior-complete v0.3 coverage contracts for `DataGrid`, `RichTextBox`, `DatePicker`, `Calendar`, `TabControl`, and `ToolBarOverflowPanel`, including focus, validation, keyboard, RTL, state, and theme-switch regression coverage.
 
 ### Changed
 

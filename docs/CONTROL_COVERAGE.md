@@ -34,9 +34,9 @@ Panels such as `Grid`, `StackPanel`, `DockPanel`, `Canvas`, `WrapPanel`, `Unifor
 
 | Status | Surfaces | Contract |
 | --- | --- | --- |
-| First-class | `CopperWindow`, dialogs, `GraphicCanvas`, `CopperIcon`, buttons, text input, lists, menus, scrollbars, tabs, toolbars, status, and common document surfaces | CopperSkin owns visual resources and regression tests cover resource loading plus core interaction state. |
+| First-class | `CopperWindow`, dialogs, `GraphicCanvas`, `CopperIcon`, buttons, text input, lists, menus, scrollbars, `DataGrid`, `RichTextBox`, `DatePicker`, `Calendar`, tabs, toolbars, status, and common document surfaces | CopperSkin owns visual resources; the v0.3 regression contract covers focus, validation, keyboard scope, disabled/read-only state, RTL preservation, and theme switching for the target controls. |
 | Safe defaults | `BulletDecorator`, `Image`, `InkPresenter`, `MediaElement` | Framework-owned behavior remains intact; CopperSkin supplies layout, pixel, stretch, and media lifecycle defaults. |
-| Partial by design | `DataGrid`, `RichTextBox`, `DatePicker`, `Calendar`, `FlowDocument*`, `Frame`, popup-heavy controls | Styles and state resources are supplied, but application-specific validation, navigation, hosted content, and framework-version behavior remain WPF-owned. |
+| Partial by design | `FlowDocument*`, `Frame`, popup-heavy controls, application-specific validation rules | Styles and state resources are supplied, but hosted content, popup focus return, application validation, and framework-version behavior remain WPF-owned. |
 | Excluded | `WebBrowser`, externally hosted visual trees, OS-owned media pipelines | A resource key alone must not be interpreted as full custom replacement. |
 
 ## Extension Points

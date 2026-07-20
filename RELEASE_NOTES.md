@@ -18,6 +18,7 @@ First official public release of the reusable CopperSkin engine, designer, CLI, 
 - Core graphics documents can be validated, inspected, serialized, embedded in theme packs, and rendered by WPF `GraphicCanvas` or `CopperIcon`.
 - SVG, DrawingImage XAML, and PNG export adapters are deterministic and covered by WPF tests.
 - Repository release metadata, MIT licensing, Windows CI, package validation, and tag-gated NuGet publishing are included.
+- The WPF partial-control wave now covers focus and validation visuals, keyboard scope, RTL-preserving state, virtualization, disabled/read-only states, and theme switching for `DataGrid`, `RichTextBox`, `DatePicker`, `Calendar`, `TabControl`, and `ToolBarOverflowPanel`.
 - The Designer preview now includes a full standard-control tab and an in-studio QuickLog-backed event log.
 - The corrected horizontal scrollbar direction is covered by regression tests and documented in the accessibility contract.
 - Package, assembly, theme pack, and release metadata are `0.3.0.0`.
