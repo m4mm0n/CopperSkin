@@ -85,6 +85,15 @@
     </Setter>
   </Style>
 
+  <ControlTemplate x:Key="CopperSkin.ValidationErrorTemplate">
+    <Border BorderBrush="{DynamicResource color.status.danger}"
+            BorderThickness="1"
+            CornerRadius="3"
+            SnapsToDevicePixels="True">
+      <AdornedElementPlaceholder/>
+    </Border>
+  </ControlTemplate>
+
   <Style TargetType="{x:Type Window}">
     <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
@@ -253,6 +262,8 @@
     <Setter Property="Padding" Value="6,4"/>
     <Setter Property="CaretBrush" Value="{DynamicResource color.accent.primary}"/>
     <Setter Property="SelectionBrush" Value="{DynamicResource color.accent.primary}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
   </Style>
 
   <Style TargetType="{x:Type RichTextBox}">
@@ -265,6 +276,10 @@
     <Setter Property="SelectionBrush" Value="{DynamicResource color.accent.primary}"/>
     <Setter Property="FontFamily" Value="Consolas"/>
     <Setter Property="MinHeight" Value="64"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
   </Style>
 
   <Style TargetType="{x:Type PasswordBox}">
@@ -419,12 +434,18 @@
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
     <Setter Property="SelectedDateFormat" Value="Short"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
   </Style>
 
   <Style TargetType="{x:Type primitives:DatePickerTextBox}">
     <Setter Property="Background" Value="{DynamicResource color.surface.control}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
     <Setter Property="SelectionBrush" Value="{DynamicResource color.accent.primary}"/>
   </Style>
 
@@ -432,6 +453,9 @@
     <Setter Property="Background" Value="{DynamicResource color.surface.panel}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
+    <Setter Property="IsTodayHighlighted" Value="True"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
   </Style>
 
   <Style TargetType="{x:Type primitives:CalendarItem}">
@@ -680,12 +704,25 @@
     <Setter Property="RowBackground" Value="{DynamicResource color.surface.panel}"/>
     <Setter Property="AlternatingRowBackground" Value="{DynamicResource color.surface.deep}"/>
     <Setter Property="AlternationCount" Value="2"/>
+    <Setter Property="SelectionUnit" Value="FullRow"/>
+    <Setter Property="HeadersVisibility" Value="All"/>
+    <Setter Property="CanUserResizeColumns" Value="True"/>
+    <Setter Property="CanUserSortColumns" Value="True"/>
+    <Setter Property="EnableRowVirtualization" Value="True"/>
+    <Setter Property="EnableColumnVirtualization" Value="True"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="KeyboardNavigation.TabNavigation" Value="Local"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
   </Style>
 
   <Style TargetType="{x:Type DataGridRow}">
     <Setter Property="Background" Value="{DynamicResource color.surface.panel}"/>
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
     <Style.Triggers>
       <Trigger Property="AlternationIndex" Value="1">
         <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
@@ -724,6 +761,8 @@
     <Setter Property="Foreground" Value="{DynamicResource color.text.primary}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.surface.hover}"/>
     <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type DataGridCell}">
@@ -910,6 +949,10 @@
   <Style TargetType="{x:Type TabControl}">
     <Setter Property="Background" Value="{DynamicResource CopperSkin.PanelBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
+    <Setter Property="KeyboardNavigation.TabNavigation" Value="Local"/>
+    <Setter Property="KeyboardNavigation.ControlTabNavigation" Value="Local"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
+    <Setter Property="Validation.ErrorTemplate" Value="{StaticResource CopperSkin.ValidationErrorTemplate}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type TabControl}">
@@ -934,6 +977,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource color.border.default}"/>
     <Setter Property="Padding" Value="10,6"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource CopperSkin.FocusVisualStyle}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type TabItem}">
@@ -1282,6 +1326,9 @@
 
   <Style TargetType="{x:Type ToolBarOverflowPanel}">
     <Setter Property="Background" Value="{DynamicResource color.surface.deep}"/>
+    <Setter Property="KeyboardNavigation.TabNavigation" Value="Cycle"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="MinHeight" Value="30"/>
   </Style>
 
   <Style TargetType="{x:Type ToolBarTray}">
