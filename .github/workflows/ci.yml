@@ -35,8 +35,12 @@ jobs:
         shell: pwsh
         run: |
           git diff --check
-          if (-not (Test-Path .\artifacts\packages\CopperSkin.Core.0.3.0.nupkg)) { throw 'Core package was not produced.' }
-          if (-not (Test-Path .\artifacts\packages\CopperSkin.Wpf.0.3.0.nupkg)) { throw 'WPF package was not produced.' }
+          $packages = @(Get-ChildItem .\artifacts\packages\*.nupkg)
+          foreach ($packageId in @('CopperSkin.Core', 'CopperSkin.Wpf')) {
+            if (-not ($packages.Name -match "^$packageId\.\d")) {
+              throw "$packageId package was not produced."
+            }
+          }
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v0.3.')
