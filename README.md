@@ -2,100 +2,174 @@
 
 ![CopperSkin logo](mainlogo.png)
 
-CopperSkin is a reusable WPF theme platform for applications that need runtime theme switching, consistent standard-control styling, custom window chrome, scoped themes, theme authoring tools, and portable theme packs.
+![Build](https://img.shields.io/badge/build-.NET%208%20%7C%209%20%7C%2010-512bd4)
+![License](https://img.shields.io/badge/license-MIT-2ea44f)
+![Release](https://img.shields.io/badge/release-0.3.0-2ea44f)
 
-[![Build](https://img.shields.io/badge/build-.NET%208%20%7C%209%20%7C%2010-512bd4)](https://dotnet.microsoft.com/)
-[![License](https://img.shields.io/badge/license-MIT-2ea44f)](https://opensource.org/license/mit/)
+CopperSkin is a reusable WPF theming platform for desktop applications that need runtime theme switching, consistent standard-control styling, custom window chrome, scoped themes, icon authoring, portable theme packs, and deterministic validation.
 
-![CopperSkin architecture](docs/assets/copperskin-architecture.svg)
+The `0.3.0` release is the first public release. It includes the reusable Core and WPF libraries, the Designer, command-line tooling, the sample application, the graphics document format, and the release pipeline.
 
-Version `0.3.0.0` adds a vector-first icon and basic-paint editor, shared runtime graphics surfaces, deterministic export, and a broader documented WPF control surface.
+![CopperSkin architecture](https://raw.githubusercontent.com/m4mm0n/CopperSkin/main/docs/assets/copperskin-architecture.svg)
+
+## Contents
+
+- [Install](#install)
+- [First application](#first-application)
+- [Theme switching](#theme-switching)
+- [WPF resources and scoped themes](#wpf-resources-and-scoped-themes)
+- [Windows, dialogs, and standard controls](#windows-dialogs-and-standard-controls)
+- [Graphics editor and icons](#graphics-editor-and-icons)
+- [Theme packs and CLI tooling](#theme-packs-and-cli-tooling)
+- [Build and test from source](#build-and-test-from-source)
+- [Packages and compatibility](#packages-and-compatibility)
+- [Documentation](#documentation)
 
 ## What is included
 
 | Project | Purpose | Target frameworks |
 | --- | --- | --- |
-| `CopperSkin.Core` | Typed theme model, validation, JSON, archives, signing, and audits | `netstandard2.0`, `net7.0`, `net8.0`, `net9.0`, `net10.0` |
-| `CopperSkin.Wpf` | Runtime resources, implicit styles, scoped themes, chrome, and dialogs | `net7.0-windows`, `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
-| `CopperSkin.Cli` | Theme export, validation, galleries, baselines, diffs, signing, and packaging | `net8.0`, `net9.0`, `net10.0` |
+| `CopperSkin.Core` | Theme model, validation, JSON, archives, signatures, graphics documents, and audits | `netstandard2.0`, `net7.0`, `net8.0`, `net9.0`, `net10.0` |
+| `CopperSkin.Wpf` | Runtime resources, implicit styles, scoped themes, chrome, dialogs, and graphics rendering | `net7.0-windows`, `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
+| `CopperSkin.Cli` | Theme export, validation, galleries, baselines, diffs, signatures, and packaging | `net8.0`, `net9.0`, `net10.0` |
 | `CopperSkin.Designer` | Live theme preview, token editing, graphics authoring, diagnostics, and export | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
 | `CopperSkin.SampleKitchenSink` | Runnable visual reference application | `net8.0-windows`, `net9.0-windows`, `net10.0-windows` |
 
-## Quick start
+## Install
 
-Install the `CopperSkin.Core` and `CopperSkin.Wpf` `0.3.0` NuGet packages (assembly version `0.3.0.0`), then install the runtime during application startup:
+For a WPF application, install both runtime packages:
+
+```powershell
+dotnet add package CopperSkin.Core --version 0.3.0
+dotnet add package CopperSkin.Wpf --version 0.3.0
+```
+
+`CopperSkin.Core` is renderer-neutral and can be used by services, build tools, and theme-pack pipelines. `CopperSkin.Wpf` adds the WPF resource dictionaries and controls.
+
+## First application
+
+Install CopperSkin during application startup. The built-in catalog supplies the included themes:
+
+```csharp
+using System.Windows;
+using CopperSkin.Core.Theming;
+using CopperSkin.Wpf;
+
+public partial class App : Application
+{
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        CopperSkinApp.Use(this)
+            .Pack(BuiltInThemeCatalog.Create())
+            .Theme("Neon Studio")
+            .Backdrop(CopperSkinBackdropKind.Mica)
+            .Install();
+    }
+}
+```
+
+The same setup can be expressed in `App.xaml` when the resource dictionary should be available before the first window is created:
+
+```xml
+<Application
+    x:Class="MyApp.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:copper="clr-namespace:CopperSkin.Wpf;assembly=CopperSkin.Wpf">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <copper:CopperSkinThemeResources Theme="Neon Studio" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+</Application>
+```
+
+## Theme switching
+
+Keep a reference to the theme manager when the user can change themes at runtime:
 
 ```csharp
 using CopperSkin.Core.Theming;
 using CopperSkin.Wpf;
 
-CopperSkinApp.Use(Application.Current)
+var manager = CopperSkinApp.Use(Application.Current)
     .Pack(BuiltInThemeCatalog.Create())
-    .Theme("Neon Studio")
-    .Backdrop(CopperSkinBackdropKind.Mica)
+    .Theme("Copper Desk")
     .Install();
+
+manager.ApplyTheme("FL Grape");
 ```
 
-For Visual Studio designer support, merge the XAML resources as well:
+Themes are token-based. Controls consume dynamic resources, so changing the active theme updates the application without rebuilding the visual tree. Use the built-in catalog as a starting point or load a validated `ThemePack` from JSON.
+
+## WPF resources and scoped themes
+
+Apply a different theme to a subtree with `CopperSkinThemeScope`:
 
 ```xml
-<Application.Resources>
-  <ResourceDictionary>
-    <ResourceDictionary.MergedDictionaries>
-      <copper:CopperSkinThemeResources Theme="FL Grape" />
-    </ResourceDictionary.MergedDictionaries>
-  </ResourceDictionary>
-</Application.Resources>
+<Border
+    xmlns:cs="clr-namespace:CopperSkin.Wpf;assembly=CopperSkin.Wpf"
+    cs:CopperSkinThemeScope.Theme="Copper Desk"
+    Padding="16">
+  <StackPanel>
+    <TextBlock Text="This subtree has its own theme." />
+    <Button Content="Continue" />
+  </StackPanel>
+</Border>
 ```
 
-Declare `xmlns:copper="clr-namespace:CopperSkin.Wpf;assembly=CopperSkin.Wpf"`. Runtime installation can still switch the active theme after startup.
+The `0.3.0` control wave covers common WPF input, navigation, data, text, layout, and dialog surfaces with shared focus, validation, disabled/read-only, keyboard-navigation, RTL, and theme-switch behavior. See [control coverage](docs/CONTROL_COVERAGE.md) for the exact support boundary.
 
-## Themed shell and dialogs
+## Windows, dialogs, and standard controls
 
 Use `CopperWindow` when CopperSkin should own the application chrome:
 
 ```xml
 <controls:CopperWindow
     x:Class="MyApp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:CopperSkin.Wpf.Controls;assembly=CopperSkin.Wpf"
     Title="My Copper App"
     Width="1100"
     Height="720">
-  <Grid />
+  <Grid>
+    <StackPanel Margin="24">
+      <TextBlock Text="CopperSkin" FontSize="26" />
+      <TextBox Margin="0,16,0,0" />
+      <Button Content="Save" Margin="0,12,0,0" />
+    </StackPanel>
+  </Grid>
 </controls:CopperWindow>
 ```
 
-Scope a different theme to a subtree:
-
-```xml
-<Border
-    xmlns:cs="clr-namespace:CopperSkin.Wpf;assembly=CopperSkin.Wpf"
-    cs:CopperSkinThemeScope.Theme="Copper Desk">
-  <StackPanel />
-</Border>
-```
-
-Show a themed message or task dialog from code:
+Show themed dialogs from code:
 
 ```csharp
-CopperMessageBox.Show(this, "Saved", "Theme pack exported.", "Nice");
+using CopperSkin.Wpf.Controls;
+
+CopperMessageBox.Show(this, "Saved", "The theme pack was exported.", "Nice");
 
 new CopperTaskDialog
 {
     Title = "Validation",
     Heading = "All good",
-    Text = "No blocking theme errors.",
+    Text = "No blocking theme errors were found.",
     Icon = CopperTaskDialogIcon.Information
 }.Show(this);
 ```
 
-## Graphics editor and runtime icons
+## Graphics editor and icons
 
-The Designer's **Graphics** tab creates icon or paint documents with layers, visibility/lock controls, rectangle/ellipse/line/freehand tools, zoom, undo/redo, save/open, and SVG/XAML/PNG export.
+Run the Designer to create vector-first icons and basic paint documents with layers, visibility and lock controls, rectangle/ellipse/line/freehand tools, zoom, undo/redo, save/open, and SVG/XAML/PNG export.
 
-![CopperSkin graphics editor workflow](docs/assets/copperskin-graphics-editor.svg)
+![CopperSkin graphics editor workflow](https://raw.githubusercontent.com/m4mm0n/CopperSkin/main/docs/assets/copperskin-graphics-editor.svg)
 
-The file format is renderer-neutral and can be validated in a build pipeline:
+The document model is renderer-neutral, so an icon can be authored once, validated in a build, rendered in WPF, and embedded in a signed theme pack:
 
 ```csharp
 using CopperSkin.Core.Graphics;
@@ -119,8 +193,14 @@ var icon = new GraphicDocument
                 {
                     Id = "circle",
                     Kind = GraphicElementKind.Ellipse,
-                    Geometry = new GraphicGeometry { Bounds = new GraphicRect(2, 2, 20, 20) },
-                    Style = new GraphicStyle { FillToken = "color.status.success" }
+                    Geometry = new GraphicGeometry
+                    {
+                        Bounds = new GraphicRect(2, 2, 20, 20)
+                    },
+                    Style = new GraphicStyle
+                    {
+                        FillToken = "color.status.success"
+                    }
                 }
             ]
         }
@@ -131,29 +211,20 @@ var json = GraphicDocumentSerializer.Serialize(icon);
 var diagnostics = GraphicDocumentValidator.Validate(icon);
 ```
 
-Render the same document in an application without duplicating the editor:
+Render the same document in WPF:
 
 ```xml
-<copper:CopperIcon Document="{Binding StatusIcon}"
-                   AccessibleName="Success"
-                   Width="24"
-                   Height="24" />
+<copper:CopperIcon
+    Document="{Binding StatusIcon}"
+    AccessibleName="Success"
+    Width="24"
+    Height="24"
+    xmlns:copper="clr-namespace:CopperSkin.Wpf.Controls;assembly=CopperSkin.Wpf" />
 ```
 
-Declare `xmlns:copper="clr-namespace:CopperSkin.Wpf.Controls;assembly=CopperSkin.Wpf"` for the runtime control.
+![CopperSkin release flow](https://raw.githubusercontent.com/m4mm0n/CopperSkin/main/docs/assets/copperskin-release-flow.svg)
 
-For headless validation and canonical JSON export:
-
-```powershell
-$cli = ".\src\CopperSkin.Cli\CopperSkin.Cli.csproj"
-dotnet run --project $cli -c Release -f net10.0 -- graphics validate .\status.ok.cgraphic
-dotnet run --project $cli -c Release -f net10.0 -- graphics inspect .\status.ok.cgraphic
-dotnet run --project $cli -c Release -f net10.0 -- graphics export .\status.ok.cgraphic .\artifacts\status.ok.json
-```
-
-WPF SVG, XAML, and PNG export is available through `GraphicExportService`; Core-only CLI export intentionally remains renderer-free.
-
-## Tools
+## Theme packs and CLI tooling
 
 Run the Designer:
 
@@ -161,7 +232,7 @@ Run the Designer:
 dotnet run --project .\src\CopperSkin.Designer\CopperSkin.Designer.csproj -c Release -f net10.0-windows
 ```
 
-Run the CLI:
+Export and validate built-in themes:
 
 ```powershell
 $cli = ".\src\CopperSkin.Cli\CopperSkin.Cli.csproj"
@@ -172,6 +243,14 @@ dotnet run --project $cli -c Release -f net10.0 -- gallery .\artifacts\theme-pac
 dotnet run --project $cli -c Release -f net10.0 -- baseline .\artifacts\theme-pack.json .\artifacts\visual-baseline.json
 ```
 
+Validate a graphics document in a headless build:
+
+```powershell
+dotnet run --project $cli -c Release -f net10.0 -- graphics validate .\status.ok.cgraphic
+dotnet run --project $cli -c Release -f net10.0 -- graphics inspect .\status.ok.cgraphic
+dotnet run --project $cli -c Release -f net10.0 -- graphics export .\status.ok.cgraphic .\artifacts\status.ok.json
+```
+
 Create and verify a signed theme pack. Keep the private key outside source control:
 
 ```powershell
@@ -180,17 +259,35 @@ dotnet run --project $cli -c Release -f net10.0 -- sign .\artifacts\theme-pack.j
 dotnet run --project $cli -c Release -f net10.0 -- verify-signature .\artifacts\signed-theme-pack.json .\artifacts\signing.public
 ```
 
-## Build and test
+Read [the graphics format](docs/GRAPHICS_FORMAT.md) and [the theme format](docs/THEME_FORMAT.md) before building a custom pack.
+
+## Build and test from source
+
+Requirements:
+
+- Windows for WPF projects and visual tests.
+- .NET SDK `10.0.301` or a compatible SDK with the .NET 8, 9, and 10 targeting packs.
+
+From the repository root:
 
 ```powershell
 dotnet restore .\CopperSkin.slnx
-dotnet build .\CopperSkin.slnx -c Release
-dotnet test .\CopperSkin.slnx -c Release --no-build
+dotnet build .\CopperSkin.slnx --configuration Release --no-restore
+dotnet test .\CopperSkin.slnx --configuration Release --no-build
+dotnet pack .\src\CopperSkin.Core\CopperSkin.Core.csproj --configuration Release --output .\artifacts\packages
+dotnet pack .\src\CopperSkin.Wpf\CopperSkin.Wpf.csproj --configuration Release --output .\artifacts\packages
 ```
 
-The verification matrix covers Core, CLI, WPF, and visual smoke tests on the supported .NET 8/9/10 lanes. WPF tests run on Windows.
+The Windows CI workflow runs the same restore, warnings-as-errors build, multi-target test matrix, and package checks. Release tags beginning with `v0.3.` additionally run the NuGet publishing job when the repository secret is configured.
 
-![CopperSkin release flow](docs/assets/copperskin-release-flow.svg)
+## Packages and compatibility
+
+| Package | Use it when |
+| --- | --- |
+| `CopperSkin.Core` | You need theme models, validation, serialization, signatures, or graphics documents without WPF. |
+| `CopperSkin.Wpf` | You need WPF resources, controls, window chrome, dialogs, or graphics rendering. |
+
+Package version `0.3.0` contains assembly/file version `0.3.0.0`. Existing theme packs without graphics remain readable. The graphics schema is versioned independently from the assembly version.
 
 ## Documentation
 
@@ -200,13 +297,8 @@ The verification matrix covers Core, CLI, WPF, and visual smoke tests on the sup
 - [Theme format](docs/THEME_FORMAT.md)
 - [Control coverage](docs/CONTROL_COVERAGE.md)
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
-- [Deployment plan](docs/aegis/plans/2026-07-16-library-deployment.md)
 - [Release notes](RELEASE_NOTES.md)
 - [Changelog](CHANGELOG.md)
-
-## Project status
-
-`0.3.0.0` is the first public-release line. The branch is verified by the Windows CI workflow with warnings treated as errors, the full multi-target test matrix, and Core/WPF package validation. Publishing to NuGet is tag- and secret-gated; see the [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## License
 
