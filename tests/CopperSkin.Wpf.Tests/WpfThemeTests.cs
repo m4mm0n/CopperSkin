@@ -25,6 +25,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Input;
 using System.Runtime.ExceptionServices;
 using CopperSkin.Core.Theming;
 using CopperSkin.Wpf;
@@ -169,6 +170,76 @@ public sealed class WpfThemeTests
             Assert.NotNull(treeItem.FocusVisualStyle);
         });
     }
+
+    /// <summary>
+    /// Verifies the v0.3 partial-control wave exposes focus, validation, keyboard, and state contracts.
+    /// </summary>
+    [WpfFact]
+    public void ThemeResourcesCompletePartialControlBehaviorContracts()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+
+            Assert.IsType<Style>(resources[typeof(DataGrid)]);
+            Assert.IsType<Style>(resources[typeof(RichTextBox)]);
+            Assert.IsType<Style>(resources[typeof(DatePicker)]);
+            Assert.IsType<Style>(resources[typeof(Calendar)]);
+            Assert.IsType<Style>(resources[typeof(TabControl)]);
+            Assert.IsType<Style>(resources[typeof(TabItem)]);
+            Assert.IsType<Style>(resources[typeof(ToolBarOverflowPanel)]);
+            Assert.IsType<ControlTemplate>(resources["CopperSkin.ValidationErrorTemplate"]);
+
+            var dataGrid = (Style)resources[typeof(DataGrid)];
+            var richTextBox = (Style)resources[typeof(RichTextBox)];
+            var datePicker = (Style)resources[typeof(DatePicker)];
+            var tabControl = (Style)resources[typeof(TabControl)];
+
+            Assert.NotNull(FindSetter(dataGrid, Control.FocusVisualStyleProperty));
+            Assert.NotNull(FindSetter(dataGrid, Validation.ErrorTemplateProperty));
+            Assert.NotNull(FindSetter(dataGrid, KeyboardNavigation.TabNavigationProperty));
+            Assert.NotNull(FindSetter(richTextBox, Control.FocusVisualStyleProperty));
+            Assert.NotNull(FindSetter(richTextBox, Validation.ErrorTemplateProperty));
+            Assert.NotNull(FindSetter(datePicker, Control.FocusVisualStyleProperty));
+            Assert.NotNull(FindSetter(datePicker, Validation.ErrorTemplateProperty));
+            Assert.NotNull(FindSetter(tabControl, KeyboardNavigation.TabNavigationProperty));
+            Assert.NotNull(FindSetter(tabControl, KeyboardNavigation.ControlTabNavigationProperty));
+
+            var readOnlyEditor = new RichTextBox { Style = richTextBox, IsReadOnly = true, FlowDirection = FlowDirection.RightToLeft };
+            var rightToLeftGrid = new DataGrid { Style = dataGrid, IsReadOnly = true, FlowDirection = FlowDirection.RightToLeft };
+            var disabledDatePicker = new DatePicker { Style = datePicker, IsEnabled = false, FlowDirection = FlowDirection.RightToLeft };
+
+            Assert.True(readOnlyEditor.IsReadOnly);
+            Assert.Equal(FlowDirection.RightToLeft, readOnlyEditor.FlowDirection);
+            Assert.True(rightToLeftGrid.IsReadOnly);
+            Assert.Equal(FlowDirection.RightToLeft, rightToLeftGrid.FlowDirection);
+            Assert.False(disabledDatePicker.IsEnabled);
+            Assert.Equal(FlowDirection.RightToLeft, disabledDatePicker.FlowDirection);
+        });
+    }
+
+    /// <summary>Verifies themed resources change their resolved palette without replacing control behavior.</summary>
+    [WpfFact]
+    public void ThemeResourcesSwitchThemeForPartialControls()
+    {
+        RunOnSta(() =>
+        {
+            var resources = new CopperSkinThemeResources { Theme = "Terminal Green" };
+            var initial = ((SolidColorBrush)resources["color.accent.primary"]).Color;
+            var controlStyle = (Style)resources[typeof(DataGrid)];
+
+            resources.Theme = "FL Grape";
+
+            var switched = ((SolidColorBrush)resources["color.accent.primary"]).Color;
+            Assert.NotEqual(initial, switched);
+            Assert.NotSame(controlStyle, resources[typeof(DataGrid)]);
+            Assert.NotNull(FindSetter((Style)resources[typeof(DataGrid)], Validation.ErrorTemplateProperty));
+            Assert.NotNull(FindSetter((Style)resources[typeof(TabItem)], Control.FocusVisualStyleProperty));
+        });
+    }
+
+    private static Setter? FindSetter(Style style, DependencyProperty property) =>
+        style.Setters.OfType<Setter>().FirstOrDefault(setter => setter.Property == property);
 
     private static void RunOnSta(Action action)
     {
